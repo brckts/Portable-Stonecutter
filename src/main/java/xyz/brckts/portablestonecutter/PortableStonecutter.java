@@ -45,7 +45,7 @@ public class PortableStonecutter
     public static final ItemGroup TAB = new ItemGroup("portableStonecutter") {
         @Override
         public ItemStack createIcon() {
-            return new ItemStack(Items.STONECUTTER);
+            return new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get());
         }
     };
 }
