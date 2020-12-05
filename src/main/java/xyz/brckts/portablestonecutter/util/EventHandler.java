@@ -2,11 +2,17 @@ package xyz.brckts.portablestonecutter.util;
 
 import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particles.BlockParticleData;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -49,10 +55,15 @@ public class EventHandler {
             if (redstoneCount >= 2 && stonecutterCount >=1 && pressurePlateCount >= 1) {
                 boolean removedPP = false;
                 boolean removedSC = false;
+                int RdToRemove = 2;
                 for(ItemEntity ie : itemEntityList) {
                     ItemStack item = ie.getItem();
-                    if(item.isItemEqual(new ItemStack(Items.REDSTONE))) {
-                        item.setCount(item.getCount() - 2);
+                    if(item.isItemEqual(new ItemStack(Items.REDSTONE)) && RdToRemove > 0) {
+                        if(item.getCount() >= 2) { item.setCount(item.getCount() - 2); }
+                        else {
+                            RdToRemove -= item.getCount();
+                            item.setCount(0);
+                        }
                     } else if (item.getItem().isIn(ItemTags.WOODEN_PRESSURE_PLATES) && !removedPP) {
                         item.setCount(item.getCount() - 1);
                         removedPP = true;
@@ -62,6 +73,9 @@ public class EventHandler {
                     }
                 }
 
+                //TODO: Learn how to do sounds and particles
+                // event.getWorld().addParticle(new BlockParticleData(ParticleTypes.BLOCK, Blocks.STONE.getDefaultState()), under.getX(), under.getY(), under.getZ(), 1.0D, 1.0D, 1.0D);
+                // event.getWorld().playSound((PlayerEntity) entity, under, SoundEvents.BLOCK_STONE_BREAK, SoundCategory.BLOCKS, 100.0f, 1.0f);
                 event.getWorld().addEntity(new ItemEntity((World)event.getWorld(), under.getX(), under.getY(), under.getZ(), new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get())));
             }
 
