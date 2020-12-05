@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "portable_stonecutter:items/portable_stonecutter"
+  }
+}
