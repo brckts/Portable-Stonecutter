@@ -3,6 +3,7 @@ package xyz.brckts.portablestonecutter.items;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.*;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -15,6 +16,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.network.NetworkHooks;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
@@ -22,7 +24,7 @@ import javax.annotation.Nullable;
 
 @Mod.EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class PortableStonecutterItem extends Item {
-    private static final ITextComponent CONTAINER_NAME = new TranslationTextComponent("container.stonecutter");
+    private static final ITextComponent CONTAINER_NAME = new TranslationTextComponent("container.portable_stonecutter");
     public PortableStonecutterItem() {
         super(new Item.Properties().group(PortableStonecutter.TAB));
     }
