@@ -36,7 +36,10 @@ public class PortableStonecutterItem extends Item {
 
 
     }
-    public INamedContainerProvider getContainer(World worldIn, PlayerEntity playerIn) {
-        return new SimpleNamedContainerProvider((id, inventory, player) -> new StonecutterContainer(id, inventory), CONTAINER_NAME);
+
+    INamedContainerProvider getContainer(World worldIn, PlayerEntity playerIn) {
+        return new SimpleNamedContainerProvider((id, inventory, player) -> {
+            return new StonecutterContainer(id, inventory);
+        }, CONTAINER_NAME);
     }
 }

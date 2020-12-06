@@ -1,4 +1,6 @@
 {
   "item.portable_stonecutter.portable_stonecutter": "Portable Stonecutter",
-  "itemGroup.portableStonecutter": "Portable Stonecutter"
+  "itemGroup.portableStonecutter": "Portable Stonecutter",
+  "jei.portable_stonecutter:anvil_flattening": "Anvil Flattening",
+  "info.portable_stonecutter:portable_stonecutter": "Drop an anvil onto the ingredients to craft."
 }

@@ -11,6 +11,7 @@ import net.minecraft.item.Items;
 import net.minecraft.particles.BlockParticleData;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -23,6 +24,7 @@ import net.minecraft.entity.item.ItemEntity;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 
 import java.util.List;
+import java.util.Random;
 
 @Mod.EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class EventHandler {
@@ -74,9 +76,6 @@ public class EventHandler {
                 }
 
                 //TODO: Learn how to do sounds and particles
-                // event.getWorld().addParticle(new BlockParticleData(ParticleTypes.BLOCK, Blocks.STONE.getDefaultState()), under.getX(), under.getY(), under.getZ(), 1.0D, 1.0D, 1.0D);
-                // event.getWorld().playSound((PlayerEntity) entity, under, SoundEvents.BLOCK_STONE_BREAK, SoundCategory.BLOCKS, 100.0f, 1.0f);
-                event.getWorld().addEntity(new ItemEntity((World)event.getWorld(), under.getX(), under.getY(), under.getZ(), new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get())));
             }
 
         }
