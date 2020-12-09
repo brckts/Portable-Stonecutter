@@ -76,6 +76,7 @@ public class EventHandler {
                 }
 
                 //TODO: Learn how to do sounds and particles
+                event.getWorld().addEntity(new ItemEntity((World)event.getWorld(), under.getX(), under.getY(), under.getZ(), new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get())));
             }
 
         }
