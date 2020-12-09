@@ -14,7 +14,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
-import xyz.brckts.portablestonecutter.network.MessagePortableStonecutterButtonPressed;
+import xyz.brckts.portablestonecutter.network.MessageButtonPressed;
+import xyz.brckts.portablestonecutter.network.MessageSelectRecipe;
 import xyz.brckts.portablestonecutter.network.NetworkHandler;
 
 import java.util.List;
@@ -157,7 +158,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
                 double d1 = mouseY - (double)(j + i1 / this.resultsPerLine * RECIPE_TILE_HEIGHT);
                 if (d0 >= 0.0D && d1 >= 0.0D && d0 < 16.0D && d1 < 18.0D && this.container.selectRecipe(this.minecraft.player, l)) {
                     Minecraft.getInstance().getSoundHandler().play(SimpleSound.master(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 1.0F));
-                    this.minecraft.playerController.sendEnchantPacket((this.container).windowId, l);
+                    NetworkHandler.channel.sendToServer(new MessageSelectRecipe(l));
                     return true;
                 }
             }
@@ -171,15 +172,15 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
             i = this.guiLeft + BUTTONS_START_X;
             j = this.guiTop + BUTTONS_START_Y;
             if (mouseX >= (double)i && mouseX < (double)(i + BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + BUTTON_HEIGHT)) {
-//                PortableStonecutter.LOGGER.debug("Sending message from client...");
                 this.clickedOnAll = true;
-//                NetworkHandler.channel.sendToServer(new MessagePortableStonecutterButtonPressed(MessagePortableStonecutterButtonPressed.CRAFT_ALL_BUTTON));
+                NetworkHandler.channel.sendToServer(new MessageButtonPressed(MessageButtonPressed.CRAFT_ALL_BUTTON));
             }
 
             i = this.guiLeft + BUTTONS_START_X + BUTTON_WIDTH;
             j = this.guiTop + BUTTONS_START_Y;
             if (mouseX >= (double)i && mouseX < (double)(i + BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + BUTTON_HEIGHT)) {
                 this.clickedOn64 = true;
+                NetworkHandler.channel.sendToServer(new MessageButtonPressed(MessageButtonPressed.CRAFT_64_BUTTON));
             }
         }
 
@@ -208,6 +209,13 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         }
 
         return true;
+    }
+
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        this.clickedOn64 = false;
+        this.clickedOnAll = false;
+        this.clickedOnSroll = false;
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     private boolean canScroll() {

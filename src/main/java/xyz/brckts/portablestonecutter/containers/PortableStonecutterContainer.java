@@ -17,10 +17,11 @@ import net.minecraft.util.IntReferenceHolder;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.List;
+
+import static xyz.brckts.portablestonecutter.util.InventoryUtils.addOrDrop;
 
 public class PortableStonecutterContainer extends Container {
 
@@ -161,23 +162,7 @@ public class PortableStonecutterContainer extends Container {
         return itemstack;
     }
 
-    /**
-     * Handle recipe selection on server
-     * @param playerIn player using the item
-     * @param recipeId selected recipe id
-     * @return always true
-     */
     public boolean selectRecipe(PlayerEntity playerIn, int recipeId) {
-
-        if (recipeId == -2 ) {
-            this.craftAll(playerIn);
-            return true;
-        }
-
-        if (recipeId == -3 ) {
-            this.craft64(playerIn);
-            return true;
-        }
         if (this.isRecipeIdValid(recipeId)) {
             this.selectedRecipe.set(recipeId);
             this.updateRecipeResultSlot();
@@ -187,52 +172,59 @@ public class PortableStonecutterContainer extends Container {
     }
 
     public void craftAll(PlayerEntity player) {
-//        PortableStonecutter.LOGGER.debug("craftAll called from " + (player.world.isRemote() ? "Client" : "Server"));
-//        if (isRecipeIdValid(this.selectedRecipe.get())) {
-//            int inputItems = 0;
-//            StonecuttingRecipe recipe = this.recipes.get(this.selectedRecipe.get());
-//            ItemStack output = recipe.getRecipeOutput();
-//            PlayerInventory inventory = player.inventory;
-//            PortableStonecutter.LOGGER.debug("Output is :" + output.getItem().getTranslationKey());
-//            for (int i = 0; i < inventory.getSizeInventory(); ++i) {
-//                if (isIngredientForSelected(inventory.getStackInSlot(i))) {
-//                    inputItems += inventory.getStackInSlot(i).getCount();
-//                    inventory.removeStackFromSlot(i);
-//                }
-//            }
-//
-//            inputItems += this.itemStackInput.getCount();
-//            this.itemStackInput = ItemStack.EMPTY;
-//            this.inputInventorySlot.onSlotChanged();
-//
-//
-//            while(inputItems > 0) {
-//                int consumed = (Math.min(inputItems, 64));
-//                int toGive = consumed * output.getCount();
-//
-//                while (toGive > 0) {
-//                    player.addItemStackToInventory(new ItemStack(output.getItem(), (Math.min(toGive, 64))));
-//                    toGive -= 64;
-//                }
-//
-//                inputItems -= consumed;
-//            }
-//            player.inventory.markDirty();
-//            inputInventory.markDirty();
-//            this.updateRecipeResultSlot();
-//        }
+        int inputCount = this.itemStackInput.getCount();
+
+        if(!isRecipeIdValid(this.getSelectedRecipe())) {
+            return;
+        }
+
+        ItemStack output = this.getRecipeList().get(this.getSelectedRecipe()).getRecipeOutput();
+
+        for (int i  = 0; i < player.inventory.getSizeInventory(); ++i) {
+            if(this.itemStackInput.isItemEqual(player.inventory.getStackInSlot(i))) {
+                inputCount += player.inventory.removeStackFromSlot(i).getCount();
+            }
+        }
+
+        addOrDrop(player, output, inputCount);
+
+        this.inputInventorySlot.putStack(ItemStack.EMPTY);
+        this.updateRecipeResultSlot();
+        player.inventory.markDirty();
     }
 
     public void craft64(PlayerEntity player) {
 
-    }
-
-    public boolean isIngredientForSelected(ItemStack is) {
-        for(ItemStack ingredient : this.recipes.get(this.selectedRecipe.get()).getIngredients().get(0).getMatchingStacks()) {
-            if (is.isItemEqual(ingredient))
-                return true;
+        if(!isRecipeIdValid(this.getSelectedRecipe())) {
+            return;
         }
-        return false;
+
+        ItemStack output = this.getRecipeList().get(this.getSelectedRecipe()).getRecipeOutput();
+
+        int toConvert = 64;
+        for (int i = 0; i < player.inventory.getSizeInventory() && toConvert > 0 ; ++i) {
+            ItemStack stack = player.inventory.getStackInSlot(i);
+            if(this.itemStackInput.isItemEqual(stack)) {
+                if (toConvert >= stack.getCount()) {
+                    toConvert -= player.inventory.removeStackFromSlot((i)).getCount();
+                } else {
+                    stack.setCount(stack.getCount() - toConvert);
+                    toConvert = 0;
+                }
+            }
+        }
+        if(toConvert > 0) {
+            if(inputInventorySlot.getStack().getCount() > toConvert) {
+                inputInventorySlot.decrStackSize(toConvert);
+                toConvert = 0;
+            } else {
+                toConvert -= inputInventorySlot.getStack().getCount();
+                inputInventorySlot.putStack(ItemStack.EMPTY);
+            }
+        }
+        addOrDrop(player, output, 64 - toConvert);
+        this.updateRecipeResultSlot();
+        player.inventory.markDirty();
     }
 
     public boolean isRecipeIdValid(int recipeId) {
