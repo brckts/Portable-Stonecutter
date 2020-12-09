@@ -9,6 +9,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import xyz.brckts.portablestonecutter.network.NetworkHandler;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -20,6 +21,7 @@ public class PortableStonecutter
 
     public PortableStonecutter() {
         RegistryHandler.init();
+        NetworkHandler.init();
 
         MinecraftForge.EVENT_BUS.register(this);
     }

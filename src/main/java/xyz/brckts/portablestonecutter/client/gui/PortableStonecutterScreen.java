@@ -1,4 +1,4 @@
-package xyz.brckts.portablestonecutter.gui;
+package xyz.brckts.portablestonecutter.client.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
@@ -14,6 +14,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
+import xyz.brckts.portablestonecutter.network.MessagePortableStonecutterButtonPressed;
+import xyz.brckts.portablestonecutter.network.NetworkHandler;
 
 import java.util.List;
 
@@ -169,8 +171,9 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
             i = this.guiLeft + BUTTONS_START_X;
             j = this.guiTop + BUTTONS_START_Y;
             if (mouseX >= (double)i && mouseX < (double)(i + BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + BUTTON_HEIGHT)) {
+//                PortableStonecutter.LOGGER.debug("Sending message from client...");
                 this.clickedOnAll = true;
-                this.container.craftAll(this.minecraft.player);
+//                NetworkHandler.channel.sendToServer(new MessagePortableStonecutterButtonPressed(MessagePortableStonecutterButtonPressed.CRAFT_ALL_BUTTON));
             }
 
             i = this.guiLeft + BUTTONS_START_X + BUTTON_WIDTH;

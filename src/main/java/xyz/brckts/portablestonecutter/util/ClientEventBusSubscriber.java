@@ -6,7 +6,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
-import xyz.brckts.portablestonecutter.gui.PortableStonecutterScreen;
+import xyz.brckts.portablestonecutter.client.gui.PortableStonecutterScreen;
 
 @Mod.EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientEventBusSubscriber {

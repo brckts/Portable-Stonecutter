@@ -17,6 +17,7 @@ import net.minecraft.util.IntReferenceHolder;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.List;
@@ -160,7 +161,23 @@ public class PortableStonecutterContainer extends Container {
         return itemstack;
     }
 
+    /**
+     * Handle recipe selection on server
+     * @param playerIn player using the item
+     * @param recipeId selected recipe id
+     * @return always true
+     */
     public boolean selectRecipe(PlayerEntity playerIn, int recipeId) {
+
+        if (recipeId == -2 ) {
+            this.craftAll(playerIn);
+            return true;
+        }
+
+        if (recipeId == -3 ) {
+            this.craft64(playerIn);
+            return true;
+        }
         if (this.isRecipeIdValid(recipeId)) {
             this.selectedRecipe.set(recipeId);
             this.updateRecipeResultSlot();
@@ -170,35 +187,47 @@ public class PortableStonecutterContainer extends Container {
     }
 
     public void craftAll(PlayerEntity player) {
-        /* repeatedly move valid stacks to input and craft with them would be better idk */
-        if (isRecipeIdValid(this.selectedRecipe.get())) {
-            int inputItems = 0;
-            StonecuttingRecipe recipe = this.recipes.get(this.selectedRecipe.get());
-            ItemStack output = recipe.getRecipeOutput();
-            PlayerInventory inventory = player.inventory;
-            for (int i = 0; i < inventory.getSizeInventory(); ++i) {
-                if (isIngredientForSelected(inventory.getStackInSlot(i))) {
-                    inputItems += inventory.getStackInSlot(i).getCount();
-                    inventory.setInventorySlotContents(i, ItemStack.EMPTY);
-                }
-            }
-
-            while(inputItems > 0) {
-                int consumed = (inputItems > 64 ? 64 : inputItems);
-                int toGive = consumed * output.getCount();
-
-                while (toGive > 0) {
-                    player.addItemStackToInventory(new ItemStack(output.getItem(), (toGive > 64 ? 64 : toGive)));
-                    toGive -= 64;
-                }
-
-                inputItems -= consumed;
-            }
-            player.inventory.markDirty();
-        }
+//        PortableStonecutter.LOGGER.debug("craftAll called from " + (player.world.isRemote() ? "Client" : "Server"));
+//        if (isRecipeIdValid(this.selectedRecipe.get())) {
+//            int inputItems = 0;
+//            StonecuttingRecipe recipe = this.recipes.get(this.selectedRecipe.get());
+//            ItemStack output = recipe.getRecipeOutput();
+//            PlayerInventory inventory = player.inventory;
+//            PortableStonecutter.LOGGER.debug("Output is :" + output.getItem().getTranslationKey());
+//            for (int i = 0; i < inventory.getSizeInventory(); ++i) {
+//                if (isIngredientForSelected(inventory.getStackInSlot(i))) {
+//                    inputItems += inventory.getStackInSlot(i).getCount();
+//                    inventory.removeStackFromSlot(i);
+//                }
+//            }
+//
+//            inputItems += this.itemStackInput.getCount();
+//            this.itemStackInput = ItemStack.EMPTY;
+//            this.inputInventorySlot.onSlotChanged();
+//
+//
+//            while(inputItems > 0) {
+//                int consumed = (Math.min(inputItems, 64));
+//                int toGive = consumed * output.getCount();
+//
+//                while (toGive > 0) {
+//                    player.addItemStackToInventory(new ItemStack(output.getItem(), (Math.min(toGive, 64))));
+//                    toGive -= 64;
+//                }
+//
+//                inputItems -= consumed;
+//            }
+//            player.inventory.markDirty();
+//            inputInventory.markDirty();
+//            this.updateRecipeResultSlot();
+//        }
     }
 
-    private boolean isIngredientForSelected(ItemStack is) {
+    public void craft64(PlayerEntity player) {
+
+    }
+
+    public boolean isIngredientForSelected(ItemStack is) {
         for(ItemStack ingredient : this.recipes.get(this.selectedRecipe.get()).getIngredients().get(0).getMatchingStacks()) {
             if (is.isItemEqual(ingredient))
                 return true;
@@ -206,7 +235,7 @@ public class PortableStonecutterContainer extends Container {
         return false;
     }
 
-    private boolean isRecipeIdValid(int recipeId) {
+    public boolean isRecipeIdValid(int recipeId) {
         return recipeId >= 0 && recipeId < this.recipes.size();
     }
 

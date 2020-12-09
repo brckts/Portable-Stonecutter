@@ -6,6 +6,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particles.BlockParticleData;
@@ -76,6 +77,7 @@ public class EventHandler {
                 }
 
                 //TODO: Learn how to do sounds and particles
+                event.getWorld().addEntity(new ItemEntity((World)event.getWorld(), under.getX(), under.getY(), under.getZ(), new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get())));
             }
 
         }
