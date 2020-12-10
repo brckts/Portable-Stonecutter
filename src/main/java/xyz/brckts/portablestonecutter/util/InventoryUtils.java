@@ -3,18 +3,14 @@ package xyz.brckts.portablestonecutter.util;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import xyz.brckts.portablestonecutter.PortableStonecutter;
 
 public class InventoryUtils {
     public static int getFirstAvailableSlot(IInventory inventory) { ;
         for (int i = 0; i < 36; ++i) {
             if (inventory.getStackInSlot(i).isEmpty()) {
-                PortableStonecutter.LOGGER.debug("Returned " + i);
                 return i;
             }
         }
-
-        PortableStonecutter.LOGGER.debug("Returned " + -1);
         return -1;
     }
 

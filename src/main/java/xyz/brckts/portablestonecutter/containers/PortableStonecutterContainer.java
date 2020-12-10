@@ -172,23 +172,24 @@ public class PortableStonecutterContainer extends Container {
     }
 
     public void craftAll(PlayerEntity player) {
-        int inputCount = this.itemStackInput.getCount();
+//        int inputCount = this.itemStackInput.getCount();
+//
+//        if(!isRecipeIdValid(this.getSelectedRecipe())) {
+//            return;
+//        }
 
-        if(!isRecipeIdValid(this.getSelectedRecipe())) {
-            return;
+//        ItemStack output = this.getRecipeList().get(this.getSelectedRecipe()).getRecipeOutput();
+//        for (int i  = 0; i < player.inventory.getSizeInventory(); ++i) {
+//            if(this.itemStackInput.isItemEqual(player.inventory.getStackInSlot(i))) {
+//                inputCount += player.inventory.removeStackFromSlot(i).getCount();
+//            }
+//        }
+//        this.inputInventorySlot.putStack(ItemStack.EMPTY);
+        while(player.inventory.hasItemStack(this.itemStackInput)) {
+            this.craft64(player);
         }
-
-        ItemStack output = this.getRecipeList().get(this.getSelectedRecipe()).getRecipeOutput();
-
-        for (int i  = 0; i < player.inventory.getSizeInventory(); ++i) {
-            if(this.itemStackInput.isItemEqual(player.inventory.getStackInSlot(i))) {
-                inputCount += player.inventory.removeStackFromSlot(i).getCount();
-            }
-        }
-
-        addOrDrop(player, output, inputCount);
-
-        this.inputInventorySlot.putStack(ItemStack.EMPTY);
+        this.craft64(player);
+        // addOrDrop(player, output, inputCount);
         this.updateRecipeResultSlot();
         player.inventory.markDirty();
     }

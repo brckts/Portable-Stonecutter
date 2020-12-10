@@ -2,30 +2,21 @@ package xyz.brckts.portablestonecutter.util;
 
 import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.particles.BlockParticleData;
-import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraft.entity.item.ItemEntity;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 
 import java.util.List;
-import java.util.Random;
 
 @Mod.EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class EventHandler {
@@ -76,7 +67,6 @@ public class EventHandler {
                     }
                 }
 
-                //TODO: Learn how to do sounds and particles
                 event.getWorld().addEntity(new ItemEntity((World)event.getWorld(), under.getX(), under.getY(), under.getZ(), new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get())));
             }
 

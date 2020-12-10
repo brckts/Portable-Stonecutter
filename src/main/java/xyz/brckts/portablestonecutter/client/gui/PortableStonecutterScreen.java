@@ -47,9 +47,9 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     final static int BUTTON_HEIGHT = 9;
     final static int BUTTONS_START_X = 7;
     final static int BUTTONS_START_Y = 34;
-
-    private int resultsPerLine = 7;
-    private int resultsMax = 21;
+    final static int RESULTS_PER_LINE = 7;
+    final static int RESULTS_MAX = 21;
+    final static int LINES_SHOWN = 3;
 
     private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(PortableStonecutter.MOD_ID, "textures/gui/portable_stonecutter_gui.png");
 
@@ -84,15 +84,15 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         this.drawButtons(matrixStack, mouseX, mouseY);
         int recipeAreaStartX = this.guiLeft + RECIPE_AREA_X_OFFSET;
         int recipeAreaStartY = this.guiTop + RECIPE_AREA_Y_OFFSET;
-        int lastShownRecipeIndex = this.recipeIndexOffset + resultsMax;
+        int lastShownRecipeIndex = this.recipeIndexOffset + RESULTS_MAX;
         this.drawRecipeFrames(matrixStack, mouseX, mouseY, recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
         this.drawRecipesItems(recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
     }
     private void drawRecipeFrames(MatrixStack matrixStack, int mouseX, int mouseY, int recipeAreaStartX, int recipeAreaStartY, int lastShownRecipeIndex) {
         for(int i = this.recipeIndexOffset; i < lastShownRecipeIndex && i < this.container.getRecipeListSize(); ++i) {
             int j = i - this.recipeIndexOffset;
-            int columnStartX = recipeAreaStartX + j % this.resultsPerLine * RECIPE_TILE_WIDTH;
-            int line = j / this.resultsPerLine;
+            int columnStartX = recipeAreaStartX + j % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
+            int line = j / RESULTS_PER_LINE;
             int lineStartY = recipeAreaStartY + line * RECIPE_TILE_HEIGHT + 2;
             int tileTextureStartY = this.ySize;
             if (i == this.container.getSelectedRecipe()) {
@@ -115,13 +115,13 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         if (this.hasItemsInInputSlot) {
             int i = this.guiLeft + RECIPE_AREA_X_OFFSET;
             int j = this.guiTop + RECIPE_AREA_Y_OFFSET;
-            int k = this.recipeIndexOffset + this.resultsMax;
+            int k = this.recipeIndexOffset + RESULTS_MAX;
             List<StonecuttingRecipe> list = this.container.getRecipeList();
 
             for(int l = this.recipeIndexOffset; l < k && l < this.container.getRecipeListSize(); ++l) {
                 int i1 = l - this.recipeIndexOffset;
-                int j1 = i + i1 % this.resultsPerLine * RECIPE_TILE_WIDTH;
-                int k1 = j + i1 / this.resultsPerLine * RECIPE_TILE_HEIGHT + 2;
+                int j1 = i + i1 % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
+                int k1 = j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT + 2;
                 if (mouseX >= j1 && mouseX < j1 + RECIPE_TILE_WIDTH && mouseY >= k1 && mouseY < k1 + RECIPE_TILE_HEIGHT) {
                     this.renderTooltip(matrixStack, list.get(l).getRecipeOutput(), mouseX, mouseY);
                 }
@@ -135,8 +135,8 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
 
         for(int i = this.recipeIndexOffset; i < recipeIndexOffsetMax && i < this.container.getRecipeListSize(); ++i) {
             int j = i - this.recipeIndexOffset;
-            int k = left + j % this.resultsPerLine * RECIPE_TILE_WIDTH;
-            int l = j / this.resultsPerLine;
+            int k = left + j % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
+            int l = j / RESULTS_PER_LINE;
             int i1 = top + l * RECIPE_TILE_HEIGHT + 2;
             this.minecraft.getItemRenderer().renderItemAndEffectIntoGUI(list.get(i).getRecipeOutput(), k, i1);
         }
@@ -150,12 +150,12 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         if (this.hasItemsInInputSlot) {
             int i = this.guiLeft + RECIPE_AREA_X_OFFSET;
             int j = this.guiTop + RECIPE_AREA_Y_OFFSET;
-            int k = this.recipeIndexOffset + this.resultsMax;
+            int k = this.recipeIndexOffset + RESULTS_MAX;
 
             for(int l = this.recipeIndexOffset; l < k; ++l) {
                 int i1 = l - this.recipeIndexOffset;
-                double d0 = mouseX - (double)(i + i1 % this.resultsPerLine * RECIPE_TILE_WIDTH);
-                double d1 = mouseY - (double)(j + i1 / this.resultsPerLine * RECIPE_TILE_HEIGHT);
+                double d0 = mouseX - (double)(i + i1 % RESULTS_PER_LINE * RECIPE_TILE_WIDTH);
+                double d1 = mouseY - (double)(j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT);
                 if (d0 >= 0.0D && d1 >= 0.0D && d0 < 16.0D && d1 < 18.0D && this.container.selectRecipe(this.minecraft.player, l)) {
                     Minecraft.getInstance().getSoundHandler().play(SimpleSound.master(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 1.0F));
                     NetworkHandler.channel.sendToServer(new MessageSelectRecipe(l));
@@ -193,7 +193,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
             int j = i + 54;
             this.sliderProgress = ((float)mouseY - (float)i - 7.5F) / ((float)(j - i) - 15.0F);
             this.sliderProgress = MathHelper.clamp(this.sliderProgress, 0.0F, 1.0F);
-            this.recipeIndexOffset = (int)((double)(this.sliderProgress * (float)this.getHiddenRows()) + 0.5D) * this.resultsPerLine;
+            this.recipeIndexOffset = (int)((double)(this.sliderProgress * (float)this.getHiddenRows()) + 0.5D) * RESULTS_PER_LINE;
             return true;
         } else {
             return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -205,7 +205,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
             int i = this.getHiddenRows();
             this.sliderProgress = (float)((double)this.sliderProgress - delta / (double)i);
             this.sliderProgress = MathHelper.clamp(this.sliderProgress, 0.0F, 1.0F);
-            this.recipeIndexOffset = (int)((double)(this.sliderProgress * (float)i) + 0.5D) * this.resultsPerLine;
+            this.recipeIndexOffset = (int)((double)(this.sliderProgress * (float)i) + 0.5D) * RESULTS_PER_LINE;
         }
 
         return true;
@@ -219,11 +219,11 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     }
 
     private boolean canScroll() {
-        return this.hasItemsInInputSlot && this.container.getRecipeListSize() > this.resultsMax;
+        return this.hasItemsInInputSlot && this.container.getRecipeListSize() > RESULTS_MAX;
     }
 
     protected int getHiddenRows() {
-        return (this.container.getRecipeListSize() + this.resultsPerLine - 1) / this.resultsPerLine - 3;
+        return (this.container.getRecipeListSize() + RESULTS_PER_LINE - 1) / RESULTS_PER_LINE - LINES_SHOWN;
     }
 
     /**
@@ -235,6 +235,5 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
             this.sliderProgress = 0.0F;
             this.recipeIndexOffset = 0;
         }
-
     }
 }
