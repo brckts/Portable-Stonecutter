@@ -47,6 +47,7 @@ public class PortableStonecutterContainer extends Container {
     final Slot inputInventorySlot;
     /** The inventory slot that stores the output of the crafting recipe. */
     final Slot outputInventorySlot;
+    private boolean recipeLocked;
 
     public PortableStonecutterContainer(int windowId, PlayerInventory playerInventory, PacketBuffer extraData) {
         this(windowId, playerInventory);
@@ -59,6 +60,7 @@ public class PortableStonecutterContainer extends Container {
         int slotSize = 16;
         int startPlayerInvY = 84;
         int hotbarY = 142;
+        this.recipeLocked = false;
         this.world = playerInventoryIn.player.world;
         this.inputInventorySlot = this.addSlot(new Slot(inputInventory, 0, startX + 4, inY + 4));
         this.outputInventorySlot = this.addSlot(new Slot(inventory, 1, startX + 4, outY + 4) {
@@ -269,6 +271,15 @@ public class PortableStonecutterContainer extends Container {
             this.recipes = this.world.getRecipeManager().getRecipes(IRecipeType.STONECUTTING, inventoryIn, this.world);
         }
 
+        this.recipeLocked = false;
+    }
+
+    public void toggleRecipeLock() {
+        this.recipeLocked = !this.recipeLocked;
+    }
+
+    public boolean isRecipeLocked() {
+        return this.recipeLocked;
     }
 
     @OnlyIn(Dist.CLIENT)

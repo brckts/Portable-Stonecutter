@@ -5,19 +5,24 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
+import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.crafting.StonecuttingRecipe;
+import net.minecraft.util.ColorHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 import xyz.brckts.portablestonecutter.network.MessageButtonPressed;
+import xyz.brckts.portablestonecutter.network.MessageLockRecipe;
 import xyz.brckts.portablestonecutter.network.MessageSelectRecipe;
 import xyz.brckts.portablestonecutter.network.NetworkHandler;
 
@@ -55,6 +60,8 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     final static int LINES_SHOWN = 3;
     final static int TITLE_X = 41;
     final static int TITLE_Y = 5;
+    final static int LOCK_INDICATOR_X = 135;
+    final static int LOCK_INDICATOR_Y = 72;
 
     final List<Item> itemList = Lists.newArrayList(GameRegistry.findRegistry(Item.class).getValues());
 
@@ -79,6 +86,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
         this.titleX = TITLE_X;
         this.titleY = TITLE_Y;
+        drawLockIndicator(matrixStack);
         super.drawGuiContainerForegroundLayer(matrixStack, x, y);
     }
 
@@ -155,6 +163,12 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         }
     }
 
+    private void drawLockIndicator(MatrixStack matrixStack) {
+        //if (this.container.isRecipeLocked()) {
+            this.font.drawString(matrixStack, "Locked !", LOCK_INDICATOR_X, LOCK_INDICATOR_Y, 1);
+        //}
+    }
+
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         this.clickedOnSroll = false;
         this.clickedOnAll = false;
@@ -171,6 +185,9 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
                 if (d0 >= 0.0D && d1 >= 0.0D && d0 < 16.0D && d1 < 18.0D && this.container.selectRecipe(this.minecraft.player, l)) {
                     Minecraft.getInstance().getSoundHandler().play(SimpleSound.master(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 1.0F));
                     NetworkHandler.channel.sendToServer(new MessageSelectRecipe(l));
+                    if(button == 1) {
+                        NetworkHandler.channel.sendToServer(new MessageLockRecipe());
+                    }
                     return true;
                 }
             }
