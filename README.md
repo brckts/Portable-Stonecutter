@@ -6,7 +6,7 @@ It also features a new and improved GUI allowing you to see more recipes at once
 or all available items and a recipe locking function allowing you to then perform the recipe without opening the GUI
 by left clicking a block with the portable stonecutter.
 
-The item is crafted inworld by droping an anvil into the ingredients as such.
-![Crafting Recipe](recipe.png)
+The item is crafted inworld by dropping an anvil unto 2 redstone dusts, a stonecutter and a wooden pressure plate
+all as item entities within a single block space.
 
-Thanks to ridanisaurus for the textures, ideas and help throughout.
+Thanks to Ridanisaurus for the textures, ideas and help throughout.
