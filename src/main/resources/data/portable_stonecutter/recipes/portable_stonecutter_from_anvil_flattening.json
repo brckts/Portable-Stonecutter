@@ -1,0 +1,19 @@
+{
+  "type": "portable_stonecutter:anvil_flattening",
+  "ingredients": [
+    {
+      "tag": "minecraft:wooden_pressure_plates"
+    },
+    {
+      "item": "minecraft:redstone"
+    },
+    {
+      "item": "minecraft:redstone"
+    },
+    {
+      "item": "minecraft:stonecutter"
+    }
+  ],
+  "output": "portable_stonecutter:portable_stonecutter"
+
+}

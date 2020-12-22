@@ -14,6 +14,8 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
@@ -67,8 +69,10 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
 
     @Override
     public void setIngredients(AnvilFlatteningRecipe anvilFlatteningRecipe, IIngredients iIngredients) {
-        iIngredients.setInputs(VanillaTypes.ITEM, ImmutableList.of(new ItemStack(Items.ANVIL), new ItemStack(Items.OAK_PRESSURE_PLATE), new ItemStack(Items.REDSTONE, 2), new ItemStack(Items.STONECUTTER)));
+        //iIngredients.setInputs(VanillaTypes.ITEM, ImmutableList.of(new ItemStack(Items.ANVIL), new ItemStack(Items.OAK_PRESSURE_PLATE), new ItemStack(Items.REDSTONE, 2), new ItemStack(Items.STONECUTTER)));
+        iIngredients.setInputIngredients(ImmutableList.of(Ingredient.fromItems(Items.ANVIL), Ingredient.fromTag(ItemTags.WOODEN_PRESSURE_PLATES), Ingredient.fromStacks(new ItemStack(Items.REDSTONE, 2)), Ingredient.fromItems(Items.STONECUTTER)));
         iIngredients.setOutput(VanillaTypes.ITEM, new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()));
+
     }
 
     @Override

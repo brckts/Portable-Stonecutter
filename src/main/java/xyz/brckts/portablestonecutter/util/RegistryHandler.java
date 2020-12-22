@@ -2,6 +2,7 @@ package xyz.brckts.portablestonecutter.util;
 
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
+import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -10,6 +11,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 import xyz.brckts.portablestonecutter.items.PortableStonecutterItem;
+import xyz.brckts.portablestonecutter.items.crafting.RecipeAnvilFlattening;
 
 public class RegistryHandler {
 

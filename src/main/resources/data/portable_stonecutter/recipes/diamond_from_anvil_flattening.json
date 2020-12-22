@@ -1,0 +1,12 @@
+{
+  "type": "portable_stonecutter:anvil_flattening",
+  "ingredients": [
+    {
+      "item": "minecraft:coal"
+    },
+    {
+      "item": "minecraft:emerald"
+    }
+  ],
+  "output": "minecraft:diamond"
+}

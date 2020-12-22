@@ -3,8 +3,10 @@ package xyz.brckts.portablestonecutter;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.EventBus;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -12,6 +14,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xyz.brckts.portablestonecutter.client.gui.PortableStonecutterScreen;
+import xyz.brckts.portablestonecutter.items.crafting.ModRecipeTypes;
 import xyz.brckts.portablestonecutter.network.NetworkHandler;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
@@ -23,7 +26,9 @@ public class PortableStonecutter
     public static final String MOD_ID = "portable_stonecutter";
 
     public PortableStonecutter() {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
+        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        modBus.addListener(this::clientSetup);
+        modBus.addGenericListener(IRecipeSerializer.class, ModRecipeTypes::register);
         RegistryHandler.init();
         NetworkHandler.init();
 
