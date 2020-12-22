@@ -2,6 +2,7 @@ package xyz.brckts.portablestonecutter.containers;
 
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -20,7 +21,6 @@ import net.minecraft.util.IntReferenceHolder;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.List;
@@ -302,7 +302,13 @@ public class PortableStonecutterContainer extends Container {
     }
 
     public void setRecipeLocked(boolean lock) {
-        this.recipeLocked = lock;
+        if(isLockable()) {
+            this.recipeLocked = lock;
+        }
+    }
+
+    public boolean isLockable() {
+        return this.isRecipeIdValid(this.getSelectedRecipe()) && Block.getBlockFromItem(this.recipes.get(this.getSelectedRecipe()).getRecipeOutput().getItem()) != Blocks.AIR;
     }
 
     public boolean isRecipeLocked() {

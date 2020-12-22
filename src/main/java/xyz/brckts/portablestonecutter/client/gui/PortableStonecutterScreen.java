@@ -1,25 +1,18 @@
 package xyz.brckts.portablestonecutter.client.gui;
 
-import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.crafting.StonecuttingRecipe;
-import net.minecraft.util.ColorHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.settings.KeyModifier;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 import xyz.brckts.portablestonecutter.network.MessageButtonPressed;
@@ -126,7 +119,9 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     private void drawButtons(MatrixStack matrixStack, int mouseX, int mouseY) {
         this.blit(matrixStack, this.guiLeft + BUTTONS_START_X, this.guiTop + BUTTONS_START_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + (this.clickedOnAll ? BUTTON_HEIGHT : 0), BUTTON_WIDTH, BUTTON_HEIGHT);
         this.blit(matrixStack, this.guiLeft + BUTTONS_START_X + BUTTON_WIDTH, this.guiTop + BUTTONS_START_Y, BUTTON_TEXTURE_X_OFFSET + BUTTON_WIDTH, BUTTON_TEXTURE_Y_OFFSET + (this.clickedOn64 ? BUTTON_HEIGHT : 0), BUTTON_WIDTH, BUTTON_HEIGHT);
-        this.blit(matrixStack, this.guiLeft + LOCK_BUTTON_X, this.guiTop + LOCK_BUTTON_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + BUTTON_HEIGHT * 2 + (this.container.isRecipeLocked() ? LOCK_BUTTON_HEIGHT : 0), LOCK_BUTTON_WIDTH, LOCK_BUTTON_HEIGHT);
+        if (this.container.isLockable()) {
+            this.blit(matrixStack, this.guiLeft + LOCK_BUTTON_X, this.guiTop + LOCK_BUTTON_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + BUTTON_HEIGHT * 2 + (this.container.isRecipeLocked() ? LOCK_BUTTON_HEIGHT : 0), LOCK_BUTTON_WIDTH, LOCK_BUTTON_HEIGHT);
+        }
     }
 
     protected void renderHoveredTooltip(MatrixStack matrixStack, int mouseX, int mouseY) {
