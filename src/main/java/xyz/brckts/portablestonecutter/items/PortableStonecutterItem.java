@@ -3,6 +3,7 @@ package xyz.brckts.portablestonecutter.items;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.IInventory;
@@ -11,13 +12,16 @@ import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.inventory.container.SimpleNamedContainerProvider;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.StonecuttingRecipe;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -116,6 +120,50 @@ public class PortableStonecutterItem extends Item {
         if(outputCnt > 1) {
             player.dropItem(new ItemStack(recipe.getRecipeOutput().getItem(), outputCnt - 1), true, true);
         }
+    }
+
+    public static void craftPortableStonecutter(World world, BlockPos pos) {
+        if (world.isRemote()) {
+            return;
+        }
+        List<ItemEntity> itemEntityList = world.getEntitiesWithinAABB(ItemEntity.class, new AxisAlignedBB(pos));
+
+        int redstoneCount = 0, stonecutterCount = 0, pressurePlateCount = 0;
+
+        for (ItemEntity ie : itemEntityList) {
+            ItemStack item = ie.getItem();
+            if (item.isItemEqual(new ItemStack(Items.REDSTONE))) {
+                redstoneCount += item.getCount();
+            } else if (item.getItem().isIn(ItemTags.WOODEN_PRESSURE_PLATES)) {
+                pressurePlateCount += item.getCount();
+            } else if (item.isItemEqual(new ItemStack(Items.STONECUTTER))) {
+                stonecutterCount += item.getCount();
+            }
+        }
+
+        if (redstoneCount >= 2 && stonecutterCount >= 1 && pressurePlateCount >= 1) {
+            boolean removedPP = false;
+            boolean removedSC = false;
+            int RdToRemove = 2;
+            for (ItemEntity ie : itemEntityList) {
+                ItemStack item = ie.getItem();
+                if (item.isItemEqual(new ItemStack(Items.REDSTONE)) && RdToRemove > 0) {
+                    if (item.getCount() >= 2) {
+                        item.setCount(item.getCount() - 2);
+                    } else {
+                        RdToRemove -= item.getCount();
+                        item.setCount(0);
+                    }
+                } else if (item.getItem().isIn(ItemTags.WOODEN_PRESSURE_PLATES) && !removedPP) {
+                    item.setCount(item.getCount() - 1);
+                    removedPP = true;
+                } else if (item.isItemEqual(new ItemStack(Items.STONECUTTER)) && !removedSC) {
+                    item.setCount(item.getCount() - 1);
+                    removedSC = true;
+                }
+            }
+        }
+        world.addEntity(new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get())));
     }
 
 
