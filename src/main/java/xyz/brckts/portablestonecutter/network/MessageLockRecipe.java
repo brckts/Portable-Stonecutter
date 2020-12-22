@@ -9,15 +9,23 @@ import java.util.function.Supplier;
 
 public class MessageLockRecipe {
 
-    public MessageLockRecipe() {
-
+    private final int recipeIndex;
+    private final boolean lockStatus;
+    public MessageLockRecipe(int recipeIndex, boolean lockStatus) {
+        this.recipeIndex = recipeIndex;
+        this.lockStatus = lockStatus;
     }
 
     public static MessageLockRecipe decode(PacketBuffer buf) {
-        return new MessageLockRecipe();
+        int recipeIndex = buf.readInt();
+        boolean lockStatus = buf.readBoolean();
+        return new MessageLockRecipe(recipeIndex, lockStatus);
     }
 
-    public static void encode(MessageLockRecipe message, PacketBuffer buf) { }
+    public static void encode(MessageLockRecipe message, PacketBuffer buf) {
+        buf.writeInt(message.recipeIndex);
+        buf.writeBoolean(message.lockStatus);
+    }
 
     public static void handle(MessageLockRecipe message, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();;
@@ -32,8 +40,15 @@ public class MessageLockRecipe {
                 return;
             }
 
+            int recipeIndex = message.recipeIndex;
+
             PortableStonecutterContainer container = (PortableStonecutterContainer) player.openContainer;
-            container.toggleRecipeLock();
+            container.setRecipeLocked(message.lockStatus);
+            if(message.lockStatus) {
+                container.onRecipeLocked(recipeIndex, player);
+            } else {
+                container.onRecipeUnlocked(player);
+            }
         });
         context.setPacketHandled(true);
     }

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.player.PlayerInventory;
@@ -53,6 +54,10 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     final static int BUTTON_TEXTURE_Y_OFFSET = 15;
     final static int BUTTON_WIDTH = 13;
     final static int BUTTON_HEIGHT = 9;
+    final static int LOCK_BUTTON_HEIGHT = 11;
+    final static int LOCK_BUTTON_WIDTH = 14;
+    final static int LOCK_BUTTON_X = 155;
+    final static int LOCK_BUTTON_Y = 71;
     final static int BUTTONS_START_X = 7;
     final static int BUTTONS_START_Y = 34;
     final static int RESULTS_PER_LINE = 7;
@@ -60,10 +65,6 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     final static int LINES_SHOWN = 3;
     final static int TITLE_X = 41;
     final static int TITLE_Y = 5;
-    final static int LOCK_INDICATOR_X = 135;
-    final static int LOCK_INDICATOR_Y = 72;
-
-    final List<Item> itemList = Lists.newArrayList(GameRegistry.findRegistry(Item.class).getValues());
 
     private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(PortableStonecutter.MOD_ID, "textures/gui/portable_stonecutter_gui.png");
 
@@ -86,7 +87,6 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
         this.titleX = TITLE_X;
         this.titleY = TITLE_Y;
-        drawLockIndicator(matrixStack);
         super.drawGuiContainerForegroundLayer(matrixStack, x, y);
     }
 
@@ -108,7 +108,6 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     }
     private void drawRecipeFrames(MatrixStack matrixStack, int mouseX, int mouseY, int recipeAreaStartX, int recipeAreaStartY, int lastShownRecipeIndex) {
         for(int i = this.recipeIndexOffset; i < lastShownRecipeIndex && i < this.container.getRecipeListSize(); ++i) {
-        //for(int i = this.recipeIndexOffset; i < lastShownRecipeIndex && i < itemList.size(); ++i) {
             int j = i - this.recipeIndexOffset;
             int columnStartX = recipeAreaStartX + j % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
             int line = j / RESULTS_PER_LINE;
@@ -127,7 +126,9 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     private void drawButtons(MatrixStack matrixStack, int mouseX, int mouseY) {
         this.blit(matrixStack, this.guiLeft + BUTTONS_START_X, this.guiTop + BUTTONS_START_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + (this.clickedOnAll ? BUTTON_HEIGHT : 0), BUTTON_WIDTH, BUTTON_HEIGHT);
         this.blit(matrixStack, this.guiLeft + BUTTONS_START_X + BUTTON_WIDTH, this.guiTop + BUTTONS_START_Y, BUTTON_TEXTURE_X_OFFSET + BUTTON_WIDTH, BUTTON_TEXTURE_Y_OFFSET + (this.clickedOn64 ? BUTTON_HEIGHT : 0), BUTTON_WIDTH, BUTTON_HEIGHT);
+        this.blit(matrixStack, this.guiLeft + LOCK_BUTTON_X, this.guiTop + LOCK_BUTTON_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + BUTTON_HEIGHT * 2 + (this.container.isRecipeLocked() ? LOCK_BUTTON_HEIGHT : 0), LOCK_BUTTON_WIDTH, LOCK_BUTTON_HEIGHT);
     }
+
     protected void renderHoveredTooltip(MatrixStack matrixStack, int mouseX, int mouseY) {
         super.renderHoveredTooltip(matrixStack, mouseX, mouseY);
         if (this.hasItemsInInputSlot) {
@@ -137,13 +138,11 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
             List<StonecuttingRecipe> list = this.container.getRecipeList();
 
             for(int l = this.recipeIndexOffset; l < k && l < this.container.getRecipeListSize(); ++l) {
-            //for(int l = this.recipeIndexOffset; l < k && l < itemList.size(); ++l) {
                 int i1 = l - this.recipeIndexOffset;
                 int j1 = i + i1 % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
                 int k1 = j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT + 2;
                 if (mouseX >= j1 && mouseX < j1 + RECIPE_TILE_WIDTH && mouseY >= k1 && mouseY < k1 + RECIPE_TILE_HEIGHT) {
                     this.renderTooltip(matrixStack, list.get(l).getRecipeOutput(), mouseX, mouseY);
-                    //this.renderTooltip(matrixStack, new ItemStack(itemList.get(l)), mouseX, mouseY);
                 }
             }
         }
@@ -153,20 +152,12 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         List<StonecuttingRecipe> list = this.container.getRecipeList();
 
         for(int i = this.recipeIndexOffset; i < recipeIndexOffsetMax && i < this.container.getRecipeListSize(); ++i) {
-        //for(int i = this.recipeIndexOffset; i < recipeIndexOffsetMax && i < itemList.size(); ++i) {
             int j = i - this.recipeIndexOffset;
             int k = left + j % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
             int l = j / RESULTS_PER_LINE;
             int i1 = top + l * RECIPE_TILE_HEIGHT + 2;
             this.minecraft.getItemRenderer().renderItemAndEffectIntoGUI(list.get(i).getRecipeOutput(), k, i1);
-            //this.itemRenderer.renderItemAndEffectIntoGUI(new ItemStack(itemList.get(i)), k, i1);
         }
-    }
-
-    private void drawLockIndicator(MatrixStack matrixStack) {
-        //if (this.container.isRecipeLocked()) {
-            this.font.drawString(matrixStack, "Locked !", LOCK_INDICATOR_X, LOCK_INDICATOR_Y, 1);
-        //}
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -184,9 +175,13 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
                 double d1 = mouseY - (double)(j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT);
                 if (d0 >= 0.0D && d1 >= 0.0D && d0 < 16.0D && d1 < 18.0D && this.container.selectRecipe(this.minecraft.player, l)) {
                     Minecraft.getInstance().getSoundHandler().play(SimpleSound.master(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 1.0F));
-                    NetworkHandler.channel.sendToServer(new MessageSelectRecipe(l));
-                    if(button == 1) {
-                        NetworkHandler.channel.sendToServer(new MessageLockRecipe());
+
+                    if(Screen.hasShiftDown() && this.container.getSelectedRecipe() != -1) {
+                        boolean desiredLock = !this.container.isRecipeLocked();
+                        this.container.setRecipeLocked(desiredLock);
+                        NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.container.getSelectedRecipe(), desiredLock));
+                    } else {
+                        NetworkHandler.channel.sendToServer(new MessageSelectRecipe(l));
                     }
                     return true;
                 }
@@ -211,6 +206,17 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
                 this.clickedOn64 = true;
                 NetworkHandler.channel.sendToServer(new MessageButtonPressed(MessageButtonPressed.CRAFT_64_BUTTON));
             }
+
+            i = this.guiLeft + LOCK_BUTTON_X;
+            j = this.guiTop + LOCK_BUTTON_Y;
+            if (mouseX >= (double)i && mouseX < (double)(i + LOCK_BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + LOCK_BUTTON_HEIGHT)) {
+                if(this.container.getSelectedRecipe() != -1) {
+                    boolean desiredLock = !this.container.isRecipeLocked();
+                    this.container.setRecipeLocked(desiredLock);
+                    NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.container.getSelectedRecipe(), desiredLock));
+                }
+            }
+
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
@@ -249,12 +255,10 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
 
     private boolean canScroll() {
         return this.hasItemsInInputSlot && this.container.getRecipeListSize() > RESULTS_MAX;
-        //return true;
     }
 
     protected int getHiddenRows() {
         return (this.container.getRecipeListSize() + RESULTS_PER_LINE - 1) / RESULTS_PER_LINE - LINES_SHOWN;
-        //return (itemList.size() + RESULTS_PER_LINE - 1) / RESULTS_PER_LINE - LINES_SHOWN;
     }
 
     /**
