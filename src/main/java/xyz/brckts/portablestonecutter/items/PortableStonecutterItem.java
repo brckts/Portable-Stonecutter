@@ -162,8 +162,8 @@ public class PortableStonecutterItem extends Item {
                     removedSC = true;
                 }
             }
+            world.addEntity(new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get())));
         }
-        world.addEntity(new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get())));
     }
 
 
