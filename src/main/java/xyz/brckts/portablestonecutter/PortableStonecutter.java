@@ -28,9 +28,9 @@ public class PortableStonecutter
     public PortableStonecutter() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         modBus.addListener(this::clientSetup);
-        modBus.addGenericListener(IRecipeSerializer.class, ModRecipeTypes::register);
         RegistryHandler.init();
         NetworkHandler.init();
+        ModRecipeTypes.init();
 
         MinecraftForge.EVENT_BUS.register(this);
     }

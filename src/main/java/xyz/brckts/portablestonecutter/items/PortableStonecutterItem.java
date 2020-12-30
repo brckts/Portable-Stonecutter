@@ -10,6 +10,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.inventory.container.SimpleNamedContainerProvider;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -23,6 +24,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
@@ -54,6 +56,8 @@ public class PortableStonecutterItem extends Item {
             return ActionResult.resultSuccess(playerIn.getActiveItemStack());
         }
     }
+
+
 
     private static void clearTags(PlayerEntity player) {
         ItemStack stack = player.getHeldItemMainhand();
@@ -114,7 +118,6 @@ public class PortableStonecutterItem extends Item {
         if(outputBlock == Blocks.AIR) {
             return;
         }
-
         world.setBlockState(pos, outputBlock.getDefaultState());
 
         if(outputCnt > 1) {

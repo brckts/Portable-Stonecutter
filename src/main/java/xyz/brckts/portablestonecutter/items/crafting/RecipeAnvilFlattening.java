@@ -3,7 +3,6 @@ package xyz.brckts.portablestonecutter.items.crafting;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
@@ -13,14 +12,14 @@ import net.minecraft.util.JSONUtils;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.items.wrapper.RecipeWrapper;
 import net.minecraftforge.registries.ForgeRegistryEntry;
-import xyz.brckts.portablestonecutter.api.IAnvilRecipe;
+import xyz.brckts.portablestonecutter.api.IAnvilFlatteningRecipe;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RecipeAnvilFlattening implements IAnvilRecipe {
+public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
 
     private final ResourceLocation id;
     private final ItemStack output;
@@ -33,7 +32,7 @@ public class RecipeAnvilFlattening implements IAnvilRecipe {
     }
 
     @Override
-    public boolean matches(IInventory inv, @Nonnull World worldIn) {
+    public boolean matches(RecipeWrapper inv, World worldIn) {
         List<Ingredient> ingredientsMissing = new ArrayList<>(inputs);
 
         for (int i = 0; i < inv.getSizeInventory(); i++) {
@@ -44,18 +43,22 @@ public class RecipeAnvilFlattening implements IAnvilRecipe {
 
             int stackIndex = -1;
 
-            for (int j = 0; j < ingredientsMissing.size(); j++) {
-                Ingredient ingr = ingredientsMissing.get(j);
-                if (ingr.test(input)) {
-                    stackIndex = j;
-                    break;
+            int count = input.getCount();
+            while (count > 0) {
+                for (int j = 0; j < ingredientsMissing.size(); j++) {
+                    Ingredient ingr = ingredientsMissing.get(j);
+                    if (ingr.test(input)) {
+                        stackIndex = j;
+                        break;
+                    }
                 }
-            }
 
-            if (stackIndex != -1) {
-                ingredientsMissing.remove(stackIndex);
-            } else {
-                return false;
+                if (stackIndex != -1) {
+                    ingredientsMissing.remove(stackIndex);
+                    count--;
+                } else {
+                    return false;
+                }
             }
         }
 
@@ -63,23 +66,28 @@ public class RecipeAnvilFlattening implements IAnvilRecipe {
     }
 
     @Override
-    public ItemStack getCraftingResult(IInventory inv) {
-        return getRecipeOutput().copy();
+    public ItemStack getCraftingResult(RecipeWrapper inv) {
+        return this.output;
     }
 
     @Override
     public ItemStack getRecipeOutput() {
-        return output;
+        return this.output;
+    }
+
+    @Override
+    public NonNullList<Ingredient> getIngredients() {
+        return this.inputs;
     }
 
     @Override
     public ResourceLocation getId() {
-        return id;
+        return this.id;
     }
 
     @Override
     public IRecipeSerializer<?> getSerializer() {
-        return ModRecipeTypes.ANVIL_FLATTENING_SERIALIZER;
+        return ModRecipeTypes.ANVIL_FLATTENING_SERIALIZER.get();
     }
 
     public static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<RecipeAnvilFlattening> {
