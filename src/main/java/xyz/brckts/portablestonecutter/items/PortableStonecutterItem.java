@@ -10,10 +10,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.inventory.container.SimpleNamedContainerProvider;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.item.*;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.StonecuttingRecipe;
 import net.minecraft.nbt.CompoundNBT;
@@ -25,6 +22,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
@@ -118,7 +116,9 @@ public class PortableStonecutterItem extends Item {
         if(outputBlock == Blocks.AIR) {
             return;
         }
-        world.setBlockState(pos, outputBlock.getDefaultState());
+
+        BlockRayTraceResult blockRayTraceResult = rayTrace(world, player, RayTraceContext.FluidMode.ANY);
+        world.setBlockState(pos, outputBlock.getStateForPlacement(new BlockItemUseContext(new ItemUseContext(player, Hand.MAIN_HAND, blockRayTraceResult))));
 
         if(outputCnt > 1) {
             player.dropItem(new ItemStack(recipe.getRecipeOutput().getItem(), outputCnt - 1), true, true);
