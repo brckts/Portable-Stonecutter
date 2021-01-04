@@ -188,11 +188,11 @@ public class PortableStonecutterContainer extends Container {
 
     public void craft64(PlayerEntity player) {
 
-        if(!isRecipeIdValid(this.getSelectedRecipe())) {
+        if(!isRecipeIdValid(this.selectedRecipe.get())) {
             return;
         }
 
-        ItemStack output = this.getRecipeList().get(this.getSelectedRecipe()).getRecipeOutput();
+        ItemStack output = this.recipes.get(this.selectedRecipe.get()).getRecipeOutput();
 
         int toConvert = 64;
         for (int i = 0; i < player.inventory.getSizeInventory() && toConvert > 0 ; ++i) {
@@ -221,7 +221,7 @@ public class PortableStonecutterContainer extends Container {
     }
 
     public void onRecipeLocked(int recipeId, ServerPlayerEntity player) {
-        if (recipeId != this.getSelectedRecipe()) {
+        if (recipeId != this.selectedRecipe.get()) {
             return;
         }
 
@@ -308,7 +308,7 @@ public class PortableStonecutterContainer extends Container {
     }
 
     public boolean isLockable() {
-        return this.isRecipeIdValid(this.getSelectedRecipe()) && Block.getBlockFromItem(this.recipes.get(this.getSelectedRecipe()).getRecipeOutput().getItem()) != Blocks.AIR;
+        return this.isRecipeIdValid(this.selectedRecipe.get()) && Block.getBlockFromItem(this.recipes.get(this.getSelectedRecipe()).getRecipeOutput().getItem()) != Blocks.AIR;
     }
 
     public boolean isRecipeLocked() {
