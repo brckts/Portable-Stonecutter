@@ -3,7 +3,6 @@ package xyz.brckts.portablestonecutter.client.gui;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.crafting.StonecuttingRecipe;
@@ -170,14 +169,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
                 double d1 = mouseY - (double)(j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT);
                 if (d0 >= 0.0D && d1 >= 0.0D && d0 < 16.0D && d1 < 18.0D && this.container.selectRecipe(this.minecraft.player, l)) {
                     Minecraft.getInstance().getSoundHandler().play(SimpleSound.master(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 1.0F));
-
-                    if(Screen.hasShiftDown() && this.container.getSelectedRecipe() != -1) {
-                        boolean desiredLock = !this.container.isRecipeLocked();
-                        this.container.setRecipeLocked(desiredLock);
-                        NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.container.getSelectedRecipe(), desiredLock));
-                    } else {
-                        NetworkHandler.channel.sendToServer(new MessageSelectRecipe(l));
-                    }
+                    NetworkHandler.channel.sendToServer(new MessageSelectRecipe(l));
                     return true;
                 }
             }

@@ -173,9 +173,9 @@ public class PortableStonecutterContainer extends Container {
         if (this.isRecipeIdValid(recipeId)) {
             this.selectedRecipe.set(recipeId);
             this.updateRecipeResultSlot();
+            return true;
         }
-
-        return true;
+        return false;
     }
 
     public void craftAll(PlayerEntity player) {
