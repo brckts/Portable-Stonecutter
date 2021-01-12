@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.StonecuttingRecipe;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IntReferenceHolder;
 import net.minecraft.world.World;
@@ -178,10 +179,23 @@ public class PortableStonecutterContainer extends Container {
     }
 
     public void craftAll(PlayerEntity player) {
-        while(player.inventory.hasItemStack(this.itemStackInput)) {
-            this.craft64(player);
+
+        if(!isRecipeIdValid(this.selectedRecipe.get())) {
+            return;
         }
-        this.craft64(player);
+
+        ItemStack output = this.recipes.get(this.selectedRecipe.get()).getRecipeOutput();
+        int inputCnt = inputInventorySlot.getStack().getCount();
+        for(ItemStack itemStack : player.inventory.mainInventory) {
+            if (itemStack.isItemEqual(this.itemStackInput) &&
+                    (NBTUtil.areNBTEquals(itemStackInput.getTag(), itemStack.getTag(), false))) {
+                inputCnt += itemStack.getCount();
+                itemStack.setCount(0);
+            }
+        }
+
+        inputInventorySlot.putStack(ItemStack.EMPTY);
+        addOrDrop(player, output, inputCnt);
         this.updateRecipeResultSlot();
         player.inventory.markDirty();
     }
@@ -308,7 +322,7 @@ public class PortableStonecutterContainer extends Container {
     }
 
     public boolean isLockable() {
-        return this.isRecipeIdValid(this.selectedRecipe.get()) && Block.getBlockFromItem(this.recipes.get(this.getSelectedRecipe()).getRecipeOutput().getItem()) != Blocks.AIR;
+        return this.isRecipeIdValid(this.selectedRecipe.get()) && Block.getBlockFromItem(this.recipes.get(this.selectedRecipe.get()).getRecipeOutput().getItem()) != Blocks.AIR;
     }
 
     public boolean isRecipeLocked() {
