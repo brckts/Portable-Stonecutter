@@ -1,0 +1,7 @@
+{
+  "item.portable_stonecutter.portable_stonecutter": "便携式切石机",
+  "itemGroup.portableStonecutter": "便携式切石机",
+  "jei.portable_stonecutter:anvil_flattening": "用铁砧压扁",
+  "info.portable_stonecutter:portable_stonecutter": "将需要合成的物品投掷在地上，然后在上方放置铁砧，让其自然落下，压扁投掷到地上的物品就可以达到合成的目的",
+  "container.portable_stonecutter": "便携式切石机"
+}
