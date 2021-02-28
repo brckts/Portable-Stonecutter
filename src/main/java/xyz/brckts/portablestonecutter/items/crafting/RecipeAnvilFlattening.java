@@ -41,10 +41,10 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
                 break;
             }
 
-            int stackIndex = -1;
-
             int count = input.getCount();
             while (count > 0) {
+
+                int stackIndex = -1;
                 for (int j = 0; j < ingredientsMissing.size(); j++) {
                     Ingredient ingr = ingredientsMissing.get(j);
                     if (ingr.test(input)) {
