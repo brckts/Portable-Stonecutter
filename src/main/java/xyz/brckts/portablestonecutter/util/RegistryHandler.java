@@ -10,6 +10,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
+import xyz.brckts.portablestonecutter.items.EnderPortableStonecutterItem;
 import xyz.brckts.portablestonecutter.items.PortableStonecutterItem;
 import xyz.brckts.portablestonecutter.items.crafting.RecipeAnvilFlattening;
 
@@ -24,5 +25,6 @@ public class RegistryHandler {
     }
 
     public static final RegistryObject<Item> PORTABLE_STONECUTTER = ITEMS.register("portable_stonecutter", PortableStonecutterItem::new);
+    public static final RegistryObject<Item> ENDER_PORTABLE_STONECUTTER = ITEMS.register("ender_portable_stonecutter", EnderPortableStonecutterItem::new);
     public static final RegistryObject<ContainerType<PortableStonecutterContainer>> PORTABLE_STONECUTTER_CONTAINER = CONTAINER_TYPES.register("portable_stonecutter_container", () -> IForgeContainerType.create(PortableStonecutterContainer::new));
 }

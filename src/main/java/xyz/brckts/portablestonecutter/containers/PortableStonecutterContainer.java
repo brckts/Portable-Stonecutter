@@ -120,7 +120,8 @@ public class PortableStonecutterContainer extends Container {
 
     @Override
     public boolean canInteractWith(PlayerEntity playerIn) {
-        return playerIn.getHeldItemMainhand().isItemEqual(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()));
+        return (playerIn.getHeldItemMainhand().isItemEqual(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get())) ||
+                playerIn.getHeldItemMainhand().isItemEqual(new ItemStack(RegistryHandler.ENDER_PORTABLE_STONECUTTER.get())));
     }
 
     public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
