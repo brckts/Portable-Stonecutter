@@ -28,7 +28,7 @@ public class MessageLockRecipe {
     }
 
     public static void handle(MessageLockRecipe message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();;
+        NetworkEvent.Context context = contextSupplier.get();
 
         context.enqueueWork(() -> {
             ServerPlayerEntity player = context.getSender();
@@ -36,13 +36,13 @@ public class MessageLockRecipe {
                 return;
             }
 
-            if (!(player.openContainer instanceof PortableStonecutterContainer)) {
+            if (!(player.containerMenu instanceof PortableStonecutterContainer)) {
                 return;
             }
 
             int recipeIndex = message.recipeIndex;
 
-            PortableStonecutterContainer container = (PortableStonecutterContainer) player.openContainer;
+            PortableStonecutterContainer container = (PortableStonecutterContainer) player.containerMenu;
             container.setRecipeLocked(message.lockStatus);
             if(message.lockStatus) {
                 container.onRecipeLocked(recipeIndex, player);

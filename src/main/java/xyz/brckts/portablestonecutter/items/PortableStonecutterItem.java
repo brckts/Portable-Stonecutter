@@ -40,25 +40,28 @@ import java.util.List;
 public class PortableStonecutterItem extends Item {
     private static final ITextComponent CONTAINER_NAME = new TranslationTextComponent("container.portable_stonecutter");
     public PortableStonecutterItem() {
-        super(new Item.Properties().group(PortableStonecutter.TAB).maxStackSize(1));
+        super(new Item.Properties().tab(PortableStonecutter.TAB).stacksTo(1));
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        if(!worldIn.isRemote()) {
+    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
+        if(!worldIn.isClientSide()) {
             clearTags(playerIn);
-            playerIn.openContainer(this.getContainer(worldIn, playerIn));
-            playerIn.addStat(Stats.INTERACT_WITH_STONECUTTER);
-            return super.onItemRightClick(worldIn, playerIn, handIn);
+            playerIn.openMenu(this.getContainer(worldIn, playerIn));
+            playerIn.awardStat(Stats.INTERACT_WITH_STONECUTTER);
+            return super.use(worldIn, playerIn, handIn);
         } else {
-            return ActionResult.resultSuccess(playerIn.getActiveItemStack());
+            return ActionResult.success(playerIn.getItemInHand(handIn));
         }
     }
 
 
 
+
+
+
     private static void clearTags(PlayerEntity player) {
-        ItemStack stack = player.getHeldItemMainhand();
+        ItemStack stack = player.getMainHandItem();
         stack.setTag(null);
     }
 
@@ -67,7 +70,7 @@ public class PortableStonecutterItem extends Item {
 
         World world = event.getWorld();
         BlockPos pos = event.getPos();
-        if(world.isRemote()) {
+        if(world.isClientSide()) {
             return;
         }
 
@@ -75,7 +78,7 @@ public class PortableStonecutterItem extends Item {
 
         ItemStack is = event.getItemStack();
 
-        if(!is.isItemEqual(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()))) {
+        if(!is.sameItemStackIgnoreDurability(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()))) {
             return;
         }
 
@@ -95,14 +98,14 @@ public class PortableStonecutterItem extends Item {
         }
 
         Item inputItem = GameRegistry.findRegistry(Item.class).getValue(inputItemRL);
-        if(!world.getBlockState(pos).getBlock().equals(Block.getBlockFromItem(inputItem))) {
+        if(!world.getBlockState(pos).getBlock().equals(Block.byItem(inputItem))) {
             return;
         }
 
         IInventory inputInventory = new Inventory(1);
-        inputInventory.setInventorySlotContents(0, new ItemStack(inputItem));
+        inputInventory.setItem(0, new ItemStack(inputItem));
 
-        List<StonecuttingRecipe> recipes = world.getRecipeManager().getRecipes(IRecipeType.STONECUTTING, inputInventory, world);
+        List<StonecuttingRecipe> recipes = world.getRecipeManager().getRecipesFor(IRecipeType.STONECUTTING, inputInventory, world);
 
         if(recipeId >= recipes.size()) {
             clearTags(player);
@@ -110,25 +113,23 @@ public class PortableStonecutterItem extends Item {
         }
 
         StonecuttingRecipe recipe = recipes.get(recipeId);
-        Block outputBlock = Block.getBlockFromItem(recipe.getRecipeOutput().getItem());
-        int outputCnt = recipe.getRecipeOutput().getCount();
+        Block outputBlock = Block.byItem(recipe.getResultItem().getItem());
+        int outputCnt = recipe.getResultItem().getCount();
 
         if(outputBlock == Blocks.AIR) {
             return;
         }
 
-        BlockRayTraceResult blockRayTraceResult = rayTrace(world, player, RayTraceContext.FluidMode.ANY);
-        world.setBlockState(pos, outputBlock.getStateForPlacement(new BlockItemUseContext(new ItemUseContext(player, Hand.MAIN_HAND, blockRayTraceResult))));
+        BlockRayTraceResult blockRayTraceResult = getPlayerPOVHitResult(world, player, RayTraceContext.FluidMode.ANY);
+        world.setBlockAndUpdate(pos, outputBlock.getStateForPlacement(new BlockItemUseContext(new ItemUseContext(player, Hand.MAIN_HAND, blockRayTraceResult))));
 
         if(outputCnt > 1) {
-            player.dropItem(new ItemStack(recipe.getRecipeOutput().getItem(), outputCnt - 1), true, true);
+            player.drop(new ItemStack(recipe.getResultItem().getItem(), outputCnt - 1), true, true);
         }
     }
 
 
     public INamedContainerProvider getContainer(World worldIn, PlayerEntity playerIn) {
-        return new SimpleNamedContainerProvider((id, inventory, player) -> {
-            return new PortableStonecutterContainer(id, inventory);
-        }, CONTAINER_NAME);
+        return new SimpleNamedContainerProvider((id, inventory, player) -> new PortableStonecutterContainer(id, inventory), CONTAINER_NAME);
     }
 }
