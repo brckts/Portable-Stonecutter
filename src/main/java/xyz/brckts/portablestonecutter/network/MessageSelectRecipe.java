@@ -24,7 +24,7 @@ public class MessageSelectRecipe {
     }
 
     public static void handle(MessageSelectRecipe message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();;
+        NetworkEvent.Context context = contextSupplier.get();
 
         context.enqueueWork(() -> {
             ServerPlayerEntity player = context.getSender();
@@ -32,12 +32,12 @@ public class MessageSelectRecipe {
                 return;
             }
 
-            if (!(player.openContainer instanceof PortableStonecutterContainer)) {
+            if (!(player.containerMenu instanceof PortableStonecutterContainer)) {
                 return;
             }
 
-            PortableStonecutterContainer container = (PortableStonecutterContainer) player.openContainer;
-            container.selectRecipe(player, message.recipe);
+            PortableStonecutterContainer container = (PortableStonecutterContainer) player.containerMenu;
+            container.selectRecipe(message.recipe);
         });
         context.setPacketHandled(true);
     }

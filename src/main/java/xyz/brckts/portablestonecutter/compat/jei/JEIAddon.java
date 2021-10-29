@@ -30,8 +30,8 @@ public class JEIAddon implements IModPlugin {
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
-        registration.addRecipes(Minecraft.getInstance().world.getRecipeManager().getRecipesForType(ModRecipeTypes.ANVIL_FLATTENING_TYPE), AnvilFlatteningRecipeCategory.UID);
-        registration.addIngredientInfo(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()), VanillaTypes.ITEM, I18n.format("info." + PortableStonecutter.MOD_ID + ":portable_stonecutter"));
+        registration.addRecipes(Minecraft.getInstance().level.getRecipeManager().getAllRecipesFor(ModRecipeTypes.ANVIL_FLATTENING_TYPE), AnvilFlatteningRecipeCategory.UID);
+        registration.addIngredientInfo(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()), VanillaTypes.ITEM, I18n.get("info." + PortableStonecutter.MOD_ID + ":portable_stonecutter"));
     }
 
     @Override

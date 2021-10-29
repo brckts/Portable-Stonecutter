@@ -40,12 +40,12 @@ public class PortableStonecutter
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
-        ScreenManager.registerFactory(RegistryHandler.PORTABLE_STONECUTTER_CONTAINER.get(), PortableStonecutterScreen::new);
+        ScreenManager.register(RegistryHandler.PORTABLE_STONECUTTER_CONTAINER.get(), PortableStonecutterScreen::new);
     }
 
     public static final ItemGroup TAB = new ItemGroup("portableStonecutter") {
         @Override
-        public ItemStack createIcon() {
+        public ItemStack makeIcon() {
             return new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get());
         }
     };

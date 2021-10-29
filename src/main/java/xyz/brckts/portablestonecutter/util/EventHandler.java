@@ -15,7 +15,7 @@ public class EventHandler {
 
     @SubscribeEvent
     public static void onFallingAnvilRemoval(EntityLeaveWorldEvent event) {
-        if(event.getWorld().isRemote()) {
+        if(event.getWorld().isClientSide()) {
             return;
         }
 
@@ -23,7 +23,7 @@ public class EventHandler {
         if(entity instanceof FallingBlockEntity) {
             FallingBlockEntity fbEntity = (FallingBlockEntity) entity;
             if(fbEntity.getBlockState().getBlock() instanceof AnvilBlock) {
-                AnvilFlatteningCraftingManager.craft(event.getWorld(), entity.getPosition());
+                AnvilFlatteningCraftingManager.craft(event.getWorld(), entity.blockPosition());
             }
         }
     }

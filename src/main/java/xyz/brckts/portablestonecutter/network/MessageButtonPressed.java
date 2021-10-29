@@ -37,11 +37,11 @@ public class MessageButtonPressed {
                 return;
             }
 
-            if (!(player.openContainer instanceof PortableStonecutterContainer)) {
+            if (!(player.containerMenu instanceof PortableStonecutterContainer)) {
                 return;
             }
 
-            PortableStonecutterContainer container = (PortableStonecutterContainer) player.openContainer;
+            PortableStonecutterContainer container = (PortableStonecutterContainer) player.containerMenu;
             if (message.buttonPressed == CRAFT_ALL_BUTTON) {
                 container.craftAll(player);
             } else if (message.buttonPressed == CRAFT_64_BUTTON) {

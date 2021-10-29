@@ -37,14 +37,14 @@ public class PortableStonecutterContainer extends Container {
          * For tile entities, ensures the chunk containing the tile entity is saved to disk later - the game won't think
          * it hasn't changed and skip it.
          */
-        public void markDirty() {
-            super.markDirty();
+        public void setChanged() {
+            super.setChanged();
             PortableStonecutterContainer.this.onCraftMatrixChanged(this);
             PortableStonecutterContainer.this.inventoryUpdateListener.run();
         }
     };
     private List<StonecuttingRecipe> recipes = Lists.newArrayList();
-    private final IntReferenceHolder selectedRecipe = IntReferenceHolder.single();
+    private final IntReferenceHolder selectedRecipe = IntReferenceHolder.standalone();
     private final World world;
     private ItemStack itemStackInput = ItemStack.EMPTY;
     /** The inventory that stores the output of the crafting recipe. */
@@ -66,17 +66,17 @@ public class PortableStonecutterContainer extends Container {
         int startPlayerInvY = 84;
         int hotbarY = 142;
         this.recipeLocked = false;
-        this.world = playerInventoryIn.player.world;
+        this.world = playerInventoryIn.player.level;
         this.inputInventorySlot = this.addSlot(new Slot(inputInventory, 0, startX + 4, inY + 4));
         this.outputInventorySlot = this.addSlot(new Slot(inventory, 1, startX + 4, outY + 4) {
-            public boolean isItemValid(ItemStack stack) {
+            public boolean mayPlace(ItemStack stack) {
                 return false;
             }
 
             public ItemStack onTake(PlayerEntity thePlayer, ItemStack stack) {
-                stack.onCrafting(thePlayer.world, thePlayer, stack.getCount());
-                PortableStonecutterContainer.this.inventory.onCrafting(thePlayer);
-                ItemStack itemstack = PortableStonecutterContainer.this.inputInventorySlot.decrStackSize(1);
+                stack.onCraftedBy(thePlayer.level, thePlayer, stack.getCount());
+                PortableStonecutterContainer.this.inventory.awardUsedRecipes(thePlayer);
+                ItemStack itemstack = PortableStonecutterContainer.this.inputInventorySlot.remove(1);
                 if (!itemstack.isEmpty()) {
                     PortableStonecutterContainer.this.updateRecipeResultSlot();
                 }
@@ -96,81 +96,82 @@ public class PortableStonecutterContainer extends Container {
             this.addSlot(new Slot(playerInventoryIn, column, startX + column * (slotSize + 2), hotbarY));
         }
 
-        this.trackInt(this.selectedRecipe);
+        this.addDataSlot(this.selectedRecipe);
     }
 
     private void updateRecipeResultSlot() {
         if (!this.recipes.isEmpty() && this.isRecipeIdValid(this.selectedRecipe.get())) {
             StonecuttingRecipe stonecuttingrecipe = this.recipes.get(this.selectedRecipe.get());
             this.inventory.setRecipeUsed(stonecuttingrecipe);
-            this.outputInventorySlot.putStack(stonecuttingrecipe.getCraftingResult(this.inputInventory));
+            this.outputInventorySlot.set(stonecuttingrecipe.assemble(this.inputInventory));
         } else {
-            this.outputInventorySlot.putStack(ItemStack.EMPTY);
+            this.outputInventorySlot.set(ItemStack.EMPTY);
         }
 
-        this.detectAndSendChanges();
+        this.broadcastChanges();
     }
 
     @Override
-    public void onContainerClosed(PlayerEntity playerIn) {
-        playerIn.addItemStackToInventory(this.inputInventory.removeStackFromSlot(0));
-        playerIn.inventory.markDirty();
-        super.onContainerClosed(playerIn);
+    public void removed(PlayerEntity playerIn) {
+        playerIn.addItem(this.inputInventory.removeItemNoUpdate(0));
+        playerIn.inventory.setChanged();
+        super.removed(playerIn);
     }
+
+
 
     @Override
-    public boolean canInteractWith(PlayerEntity playerIn) {
-        return (playerIn.getHeldItemMainhand().isItemEqual(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get())) ||
-                playerIn.getHeldItemMainhand().isItemEqual(new ItemStack(RegistryHandler.ENDER_PORTABLE_STONECUTTER.get())));
+    public boolean stillValid(PlayerEntity playerIn) {
+        return playerIn.getMainHandItem().sameItemStackIgnoreDurability(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()));
     }
 
-    public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
+    public ItemStack quickMoveStack(PlayerEntity playerIn, int index) {
         ItemStack itemstack = ItemStack.EMPTY;
-        Slot slot = this.inventorySlots.get(index);
-        if (slot != null && slot.getHasStack()) {
-            ItemStack itemstack1 = slot.getStack();
+        Slot slot = this.slots.get(index);
+        if (slot != null && slot.hasItem()) {
+            ItemStack itemstack1 = slot.getItem();
             Item item = itemstack1.getItem();
             itemstack = itemstack1.copy();
             if (index == 1) {
-                item.onCreated(itemstack1, playerIn.world, playerIn);
-                if (!this.mergeItemStack(itemstack1, 2, 38, true)) {
+                item.onCraftedBy(itemstack1, playerIn.level, playerIn);
+                if (!this.moveItemStackTo(itemstack1, 2, 38, true)) {
                     return ItemStack.EMPTY;
                 }
 
-                slot.onSlotChange(itemstack1, itemstack);
+                slot.onQuickCraft(itemstack1, itemstack);
             } else if (index == 0) {
-                if (!this.mergeItemStack(itemstack1, 2, 38, false)) {
+                if (!this.moveItemStackTo(itemstack1, 2, 38, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (this.world.getRecipeManager().getRecipe(IRecipeType.STONECUTTING, new Inventory(itemstack1), this.world).isPresent()) {
-                if (!this.mergeItemStack(itemstack1, 0, 1, false)) {
+            } else if (this.world.getRecipeManager().getRecipeFor(IRecipeType.STONECUTTING, new Inventory(itemstack1), this.world).isPresent()) {
+                if (!this.moveItemStackTo(itemstack1, 0, 1, false)) {
                     return ItemStack.EMPTY;
                 }
             } else if (index >= 2 && index < 29) {
-                if (!this.mergeItemStack(itemstack1, 29, 38, false)) {
+                if (!this.moveItemStackTo(itemstack1, 29, 38, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (index >= 29 && index < 38 && !this.mergeItemStack(itemstack1, 2, 29, false)) {
+            } else if (index >= 29 && index < 38 && !this.moveItemStackTo(itemstack1, 2, 29, false)) {
                 return ItemStack.EMPTY;
             }
 
             if (itemstack1.isEmpty()) {
-                slot.putStack(ItemStack.EMPTY);
+                slot.set(ItemStack.EMPTY);
             }
 
-            slot.onSlotChanged();
+            slot.setChanged();
             if (itemstack1.getCount() == itemstack.getCount()) {
                 return ItemStack.EMPTY;
             }
 
             slot.onTake(playerIn, itemstack1);
-            this.detectAndSendChanges();
+            this.broadcastChanges();
         }
 
         return itemstack;
     }
 
-    public boolean selectRecipe(PlayerEntity playerIn, int recipeId) {
+    public boolean selectRecipe(int recipeId) {
         if (this.isRecipeIdValid(recipeId)) {
             this.selectedRecipe.set(recipeId);
             this.updateRecipeResultSlot();
@@ -185,20 +186,20 @@ public class PortableStonecutterContainer extends Container {
             return;
         }
 
-        ItemStack output = this.recipes.get(this.selectedRecipe.get()).getRecipeOutput();
-        int inputCnt = inputInventorySlot.getStack().getCount();
-        for(ItemStack itemStack : player.inventory.mainInventory) {
-            if (itemStack.isItemEqual(this.itemStackInput) &&
-                    (NBTUtil.areNBTEquals(itemStackInput.getTag(), itemStack.getTag(), false))) {
+        ItemStack output = this.recipes.get(this.selectedRecipe.get()).getResultItem();
+        int inputCnt = inputInventorySlot.getItem().getCount();
+        for(ItemStack itemStack : player.inventory.items) {
+            if (itemStack.sameItemStackIgnoreDurability(this.itemStackInput) &&
+                    (NBTUtil.compareNbt(itemStackInput.getTag(), itemStack.getTag(), false))) {
                 inputCnt += itemStack.getCount();
                 itemStack.setCount(0);
             }
         }
 
-        inputInventorySlot.putStack(ItemStack.EMPTY);
+        inputInventorySlot.set(ItemStack.EMPTY);
         addOrDrop(player, output, inputCnt);
         this.updateRecipeResultSlot();
-        player.inventory.markDirty();
+        player.inventory.setChanged();
     }
 
     public void craft64(PlayerEntity player) {
@@ -207,14 +208,15 @@ public class PortableStonecutterContainer extends Container {
             return;
         }
 
-        ItemStack output = this.recipes.get(this.selectedRecipe.get()).getRecipeOutput();
+        ItemStack output = this.recipes.get(this.selectedRecipe.get()).getResultItem();
 
         int toConvert = 64;
-        for (int i = 0; i < player.inventory.getSizeInventory() && toConvert > 0 ; ++i) {
-            ItemStack stack = player.inventory.getStackInSlot(i);
-            if(this.itemStackInput.isItemEqual(stack)) {
+        for (int i = 0; i < player.inventory.getContainerSize() && toConvert > 0 ; ++i) {
+            ItemStack stack = player.inventory.getItem(i);
+            if(this.itemStackInput.sameItemStackIgnoreDurability(stack)) {
                 if (toConvert >= stack.getCount()) {
-                    toConvert -= player.inventory.removeStackFromSlot((i)).getCount();
+                    toConvert -= stack.getCount();
+                    player.inventory.setItem(i, ItemStack.EMPTY);
                 } else {
                     stack.setCount(stack.getCount() - toConvert);
                     toConvert = 0;
@@ -222,17 +224,17 @@ public class PortableStonecutterContainer extends Container {
             }
         }
         if(toConvert > 0) {
-            if(inputInventorySlot.getStack().getCount() > toConvert) {
-                inputInventorySlot.decrStackSize(toConvert);
+            if(inputInventorySlot.getItem().getCount() > toConvert) {
+                inputInventorySlot.remove(toConvert);
                 toConvert = 0;
             } else {
-                toConvert -= inputInventorySlot.getStack().getCount();
-                inputInventorySlot.putStack(ItemStack.EMPTY);
+                toConvert -= inputInventorySlot.getItem().getCount();
+                inputInventorySlot.set(ItemStack.EMPTY);
             }
         }
         addOrDrop(player, output, 64 - toConvert);
         this.updateRecipeResultSlot();
-        player.inventory.markDirty();
+        player.inventory.setChanged();
     }
 
     public void onRecipeLocked(int recipeId, ServerPlayerEntity player) {
@@ -244,7 +246,7 @@ public class PortableStonecutterContainer extends Container {
             return;
         }
 
-        ItemStack pScStack = player.getHeldItemMainhand();
+        ItemStack pScStack = player.getMainHandItem();
         CompoundNBT nbtTagCompound = pScStack.getTag();
         Item inputItem = this.itemStackInput.getItem();
         if (nbtTagCompound == null) {
@@ -261,11 +263,11 @@ public class PortableStonecutterContainer extends Container {
             return;
         }
 
-        if(player.getHeldItemMainhand().getTag() == null) {
+        if(player.getMainHandItem().getTag() == null) {
             return;
         }
 
-        player.getHeldItemMainhand().setTag(null);
+        player.getMainHandItem().setTag(null);
     }
 
     public boolean isRecipeIdValid(int recipeId) {
@@ -288,12 +290,12 @@ public class PortableStonecutterContainer extends Container {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public boolean hasItemsinInputSlot() {
-        return this.inputInventorySlot.getHasStack() && !this.recipes.isEmpty();
+    public boolean hasItemsInInputSlot() {
+        return this.inputInventorySlot.hasItem() && !this.recipes.isEmpty();
     }
 
     public void onCraftMatrixChanged(IInventory inventoryIn) {
-        ItemStack itemstack = this.inputInventorySlot.getStack();
+        ItemStack itemstack = this.inputInventorySlot.getItem();
         if (itemstack.getItem() != this.itemStackInput.getItem()) {
             this.itemStackInput = itemstack.copy();
             this.updateAvailableRecipes(inventoryIn, itemstack);
@@ -304,9 +306,9 @@ public class PortableStonecutterContainer extends Container {
     private void updateAvailableRecipes(IInventory inventoryIn, ItemStack stack) {
         this.recipes.clear();
         this.selectedRecipe.set(-1);
-        this.outputInventorySlot.putStack(ItemStack.EMPTY);
+        this.outputInventorySlot.set(ItemStack.EMPTY);
         if (!stack.isEmpty()) {
-            this.recipes = this.world.getRecipeManager().getRecipes(IRecipeType.STONECUTTING, inventoryIn, this.world);
+            this.recipes = this.world.getRecipeManager().getRecipesFor(IRecipeType.STONECUTTING, inventoryIn, this.world);
         }
 
         this.recipeLocked = false;
@@ -323,7 +325,7 @@ public class PortableStonecutterContainer extends Container {
     }
 
     public boolean isLockable() {
-        return this.isRecipeIdValid(this.selectedRecipe.get()) && Block.getBlockFromItem(this.recipes.get(this.selectedRecipe.get()).getRecipeOutput().getItem()) != Blocks.AIR;
+        return this.isRecipeIdValid(this.selectedRecipe.get()) && Block.byItem(this.recipes.get(this.selectedRecipe.get()).getResultItem().getItem()) != Blocks.AIR;
     }
 
     public boolean isRecipeLocked() {

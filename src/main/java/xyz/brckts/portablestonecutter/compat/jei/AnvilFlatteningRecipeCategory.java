@@ -24,7 +24,7 @@ import java.util.List;
 
 public class AnvilFlatteningRecipeCategory implements IRecipeCategory<IAnvilFlatteningRecipe> {
 
-    public static final ResourceLocation UID = new ResourceLocation(PortableStonecutter.MOD_ID, "anvil_flattening");
+    public static final ResourceLocation UID = new ResourceLocation(PortableStonecutter.MOD_ID, "jei_anvil_flattening");
     private static final ResourceLocation texture = new ResourceLocation(PortableStonecutter.MOD_ID, "textures/gui/jei_anvil_flattening.png");
 
     private final IDrawableStatic background;
@@ -35,7 +35,7 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<IAnvilFlat
     public AnvilFlatteningRecipeCategory(IGuiHelper guiHelper) {
         this.background = guiHelper.createBlankDrawable(90, 90);
         this.icon = guiHelper.createDrawableIngredient(new ItemStack(Blocks.ANVIL));
-        this.title = I18n.format("jei." + UID.toString());
+        this.title = I18n.get("jei." + UID.toString());
         this.overlay = guiHelper.createDrawable(texture, 0, 0, 64, 64);
     }
 
@@ -71,10 +71,10 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<IAnvilFlat
     public void setIngredients(IAnvilFlatteningRecipe recipe, IIngredients ingredients) {
         List<List<ItemStack>> list = new ArrayList<>();
         for (Ingredient ingr : recipe.getIngredients()) {
-            list.add(Arrays.asList(ingr.getMatchingStacks()));
+            list.add(Arrays.asList(ingr.getItems()));
         }
         ingredients.setInputLists(VanillaTypes.ITEM, list);
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
+        ingredients.setOutput(VanillaTypes.ITEM, recipe.getResultItem());
     }
 
     @Override
