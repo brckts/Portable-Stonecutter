@@ -22,6 +22,7 @@ import net.minecraft.util.IntReferenceHolder;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import xyz.brckts.portablestonecutter.items.PortableStonecutterItem;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.List;
@@ -122,7 +123,7 @@ public class PortableStonecutterContainer extends Container {
 
     @Override
     public boolean stillValid(PlayerEntity playerIn) {
-        return playerIn.getMainHandItem().sameItemStackIgnoreDurability(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()));
+        return playerIn.getMainHandItem().getItem() instanceof PortableStonecutterItem;
     }
 
     public ItemStack quickMoveStack(PlayerEntity playerIn, int index) {
