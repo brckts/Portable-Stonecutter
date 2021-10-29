@@ -24,7 +24,7 @@ import java.util.List;
 
 public class AnvilFlatteningRecipeCategory implements IRecipeCategory<IAnvilFlatteningRecipe> {
 
-    public static final ResourceLocation UID = new ResourceLocation(PortableStonecutter.MOD_ID, "anvil_flattening");
+    public static final ResourceLocation UID = new ResourceLocation(PortableStonecutter.MOD_ID, "jei_anvil_flattening");
     private static final ResourceLocation texture = new ResourceLocation(PortableStonecutter.MOD_ID, "textures/gui/jei_anvil_flattening.png");
 
     private final IDrawableStatic background;

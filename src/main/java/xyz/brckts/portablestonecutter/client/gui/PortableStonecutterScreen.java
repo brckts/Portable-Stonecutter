@@ -26,7 +26,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
 
     private float sliderProgress;
     /** Is {@code true} if the player clicked on the scroll wheel in the GUI. */
-    private boolean clickedOnSroll;
+    private boolean clickedOnScroll;
     private boolean clickedOnAll;
     private boolean clickedOn64;
     private int recipeIndexOffset;
@@ -155,7 +155,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        this.clickedOnSroll = false;
+        this.clickedOnScroll = false;
         this.clickedOnAll = false;
         this.clickedOn64 = false;
         if (this.hasItemsInInputSlot) {
@@ -177,7 +177,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
             i = this.leftPos + SLIDER_X;
             j = this.topPos + SLIDER_Y;
             if (mouseX >= (double)i && mouseX < (double)(i + SLIDER_TEXTURE_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + 54)) {
-                this.clickedOnSroll = true;
+                this.clickedOnScroll = true;
             }
 
             i = this.leftPos + BUTTONS_START_X;
@@ -210,7 +210,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     }
 
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (this.clickedOnSroll && this.canScroll()) {
+        if (this.clickedOnScroll && this.canScroll()) {
             int i = this.topPos + SLIDER_Y;
             int j = i + 54;
             this.sliderProgress = ((float)mouseY - (float)i - 7.5F) / ((float)(j - i) - 15.0F);
@@ -236,7 +236,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         this.clickedOn64 = false;
         this.clickedOnAll = false;
-        this.clickedOnSroll = false;
+        this.clickedOnScroll = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 

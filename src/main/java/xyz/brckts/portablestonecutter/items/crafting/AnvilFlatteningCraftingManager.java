@@ -9,9 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
-import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.api.IAnvilFlatteningRecipe;
-import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +55,6 @@ public class AnvilFlatteningCraftingManager {
             }
         }
 
-        //(new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), recipe.getResultItem()));
-
+        world.addFreshEntity(new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), recipe.getResultItem()));
     }
 }
