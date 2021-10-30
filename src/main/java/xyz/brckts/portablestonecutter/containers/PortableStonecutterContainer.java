@@ -22,6 +22,7 @@ import net.minecraft.util.IntReferenceHolder;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.items.PortableStonecutterItem;
 import xyz.brckts.portablestonecutter.util.NBTHelper;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
@@ -332,7 +333,6 @@ public class PortableStonecutterContainer extends Container {
         return this.lockedInput;
     }
 
-    //TODO: If new input stack is input for locked recipe -> select locked recipe
     public void onCraftMatrixChanged(IInventory inventoryIn) {
         ItemStack itemstack = this.inputInventorySlot.getItem();
         if (itemstack.getItem() != this.itemStackInput.getItem()) {
@@ -347,8 +347,13 @@ public class PortableStonecutterContainer extends Container {
         this.selectedRecipe.set(-1);
         this.outputInventorySlot.set(ItemStack.EMPTY);
         if (!stack.isEmpty()) {
-            this.recipeLocked = false;
             this.recipes = this.world.getRecipeManager().getRecipesFor(IRecipeType.STONECUTTING, inventoryIn, this.world);
+            if (stack.getItem().equals(this.lockedInput)) {
+                this.selectedRecipe.set(this.recipes.indexOf(this.lockedRecipe));
+                this.updateRecipeResultSlot();
+            } else {
+                this.recipeLocked = false;
+            }
         }
     }
 
