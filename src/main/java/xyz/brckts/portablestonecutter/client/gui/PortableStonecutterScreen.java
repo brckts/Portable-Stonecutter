@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.StonecuttingRecipe;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvents;
@@ -32,6 +33,10 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     private int recipeIndexOffset;
     private boolean hasItemsInInputSlot;
 
+    final static int INPUT_X = 12;
+    final static int INPUT_Y = 12;
+    final static int OUTPUT_X = 12;
+    final static int OUTPUT_Y = 49;
     final static int SLIDER_X = 156;
     final static int SLIDER_Y = 15;
     final static int SLIDER_TEXTURE_X = 176;
@@ -97,6 +102,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         int lastShownRecipeIndex = this.recipeIndexOffset + RESULTS_MAX;
         this.drawRecipeFrames(matrixStack, mouseX, mouseY, recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
         this.drawRecipesItems(recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
+        if (this.menu.isRecipeLocked()) this.drawLockedItem();
     }
     private void drawRecipeFrames(MatrixStack matrixStack, int mouseX, int mouseY, int recipeAreaStartX, int recipeAreaStartY, int lastShownRecipeIndex) {
         for(int i = this.recipeIndexOffset; i < lastShownRecipeIndex && i < this.menu.getRecipeListSize(); ++i) {
@@ -118,7 +124,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     private void drawButtons(MatrixStack matrixStack, int mouseX, int mouseY) {
         this.blit(matrixStack, this.leftPos + BUTTONS_START_X, this.topPos + BUTTONS_START_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + (this.clickedOnAll ? BUTTON_HEIGHT : 0), BUTTON_WIDTH, BUTTON_HEIGHT);
         this.blit(matrixStack, this.leftPos + BUTTONS_START_X + BUTTON_WIDTH, this.topPos + BUTTONS_START_Y, BUTTON_TEXTURE_X_OFFSET + BUTTON_WIDTH, BUTTON_TEXTURE_Y_OFFSET + (this.clickedOn64 ? BUTTON_HEIGHT : 0), BUTTON_WIDTH, BUTTON_HEIGHT);
-        if (this.menu.isLockable()) {
+        if (this.menu.isLockable() || this.menu.isRecipeLocked()) {
             this.blit(matrixStack, this.leftPos + LOCK_BUTTON_X, this.topPos + LOCK_BUTTON_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + BUTTON_HEIGHT * 2 + (this.menu.isRecipeLocked() ? LOCK_BUTTON_HEIGHT : 0), LOCK_BUTTON_WIDTH, LOCK_BUTTON_HEIGHT);
         }
     }
@@ -154,6 +160,14 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         }
     }
 
+    //TODO: Render transparent
+    private void drawLockedItem() {
+        if (this.menu.getLockedRecipe() != null && this.menu.getLockedInput() != null) {
+            this.minecraft.getItemRenderer().renderGuiItem(new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y);
+            this.minecraft.getItemRenderer().renderGuiItem(this.menu.getLockedRecipe().getResultItem(), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y);
+        }
+    }
+
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         this.clickedOnScroll = false;
         this.clickedOnAll = false;
@@ -163,10 +177,10 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
             int j = this.topPos + RECIPE_AREA_Y_OFFSET;
             int k = this.recipeIndexOffset + RESULTS_MAX;
 
-            for(int l = this.recipeIndexOffset; l < k; ++l) {
+            for (int l = this.recipeIndexOffset; l < k; ++l) {
                 int i1 = l - this.recipeIndexOffset;
-                double d0 = mouseX - (double)(i + i1 % RESULTS_PER_LINE * RECIPE_TILE_WIDTH);
-                double d1 = mouseY - (double)(j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT);
+                double d0 = mouseX - (double) (i + i1 % RESULTS_PER_LINE * RECIPE_TILE_WIDTH);
+                double d1 = mouseY - (double) (j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT);
                 if (d0 >= 0.0D && d1 >= 0.0D && d0 < 16.0D && d1 < 18.0D && this.menu.selectRecipe(l)) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 1.0F));
                     NetworkHandler.channel.sendToServer(new MessageSelectRecipe(l));
@@ -176,34 +190,35 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
 
             i = this.leftPos + SLIDER_X;
             j = this.topPos + SLIDER_Y;
-            if (mouseX >= (double)i && mouseX < (double)(i + SLIDER_TEXTURE_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + 54)) {
+            if (mouseX >= (double) i && mouseX < (double) (i + SLIDER_TEXTURE_WIDTH) && mouseY >= (double) j && mouseY < (double) (j + 54)) {
                 this.clickedOnScroll = true;
             }
 
             i = this.leftPos + BUTTONS_START_X;
             j = this.topPos + BUTTONS_START_Y;
-            if (mouseX >= (double)i && mouseX < (double)(i + BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + BUTTON_HEIGHT)) {
+            if (mouseX >= (double) i && mouseX < (double) (i + BUTTON_WIDTH) && mouseY >= (double) j && mouseY < (double) (j + BUTTON_HEIGHT)) {
                 this.clickedOnAll = true;
                 NetworkHandler.channel.sendToServer(new MessageButtonPressed(MessageButtonPressed.CRAFT_ALL_BUTTON));
             }
 
             i = this.leftPos + BUTTONS_START_X + BUTTON_WIDTH;
             j = this.topPos + BUTTONS_START_Y;
-            if (mouseX >= (double)i && mouseX < (double)(i + BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + BUTTON_HEIGHT)) {
+            if (mouseX >= (double) i && mouseX < (double) (i + BUTTON_WIDTH) && mouseY >= (double) j && mouseY < (double) (j + BUTTON_HEIGHT)) {
                 this.clickedOn64 = true;
                 NetworkHandler.channel.sendToServer(new MessageButtonPressed(MessageButtonPressed.CRAFT_64_BUTTON));
             }
+        }
 
-            i = this.leftPos + LOCK_BUTTON_X;
-            j = this.topPos + LOCK_BUTTON_Y;
-            if (mouseX >= (double)i && mouseX < (double)(i + LOCK_BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + LOCK_BUTTON_HEIGHT)) {
-                if(this.menu.getSelectedRecipe() != -1) {
-                    boolean desiredLock = !this.menu.isRecipeLocked();
-                    this.menu.setRecipeLocked(desiredLock);
-                    NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.menu.getSelectedRecipe(), desiredLock));
-                }
+        int i = this.leftPos + LOCK_BUTTON_X;
+        int j = this.topPos + LOCK_BUTTON_Y;
+        if (mouseX >= (double)i && mouseX < (double)(i + LOCK_BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + LOCK_BUTTON_HEIGHT)) {
+            if (this.menu.isRecipeLocked()) {
+                this.menu.setRecipeLocked(false);
+                NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.menu.getSelectedRecipe(), false));
+            } else if (this.menu.getSelectedRecipe() != -1) {
+                this.menu.setRecipeLocked(true);
+                NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.menu.getSelectedRecipe(), true));
             }
-
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
