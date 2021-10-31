@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.StonecuttingRecipe;
 import net.minecraft.util.ResourceLocation;
@@ -19,6 +20,7 @@ import xyz.brckts.portablestonecutter.network.MessageButtonPressed;
 import xyz.brckts.portablestonecutter.network.MessageLockRecipe;
 import xyz.brckts.portablestonecutter.network.MessageSelectRecipe;
 import xyz.brckts.portablestonecutter.network.NetworkHandler;
+import xyz.brckts.portablestonecutter.util.client.RenderHelper;
 
 import java.util.List;
 
@@ -165,6 +167,8 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         if (this.menu.getLockedRecipe() != null && this.menu.getLockedInput() != null) {
             this.minecraft.getItemRenderer().renderGuiItem(new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y);
             this.minecraft.getItemRenderer().renderGuiItem(this.menu.getLockedRecipe().getResultItem(), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y);
+            //RenderHelper.renderGuiItemWithAlpha(new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y, 0.3F);
+            //RenderHelper.renderGuiItemWithAlpha(this.menu.getLockedRecipe().getResultItem(), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y, 0.3F);
         }
     }
 
@@ -172,9 +176,10 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         this.clickedOnScroll = false;
         this.clickedOnAll = false;
         this.clickedOn64 = false;
+        int i, j;
         if (this.hasItemsInInputSlot) {
-            int i = this.leftPos + RECIPE_AREA_X_OFFSET;
-            int j = this.topPos + RECIPE_AREA_Y_OFFSET;
+            i = this.leftPos + RECIPE_AREA_X_OFFSET;
+            j = this.topPos + RECIPE_AREA_Y_OFFSET;
             int k = this.recipeIndexOffset + RESULTS_MAX;
 
             for (int l = this.recipeIndexOffset; l < k; ++l) {
@@ -193,7 +198,9 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
             if (mouseX >= (double) i && mouseX < (double) (i + SLIDER_TEXTURE_WIDTH) && mouseY >= (double) j && mouseY < (double) (j + 54)) {
                 this.clickedOnScroll = true;
             }
+        }
 
+        if (this.hasItemsInInputSlot || this.menu.isRecipeLocked()) {
             i = this.leftPos + BUTTONS_START_X;
             j = this.topPos + BUTTONS_START_Y;
             if (mouseX >= (double) i && mouseX < (double) (i + BUTTON_WIDTH) && mouseY >= (double) j && mouseY < (double) (j + BUTTON_HEIGHT)) {
@@ -209,8 +216,8 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
             }
         }
 
-        int i = this.leftPos + LOCK_BUTTON_X;
-        int j = this.topPos + LOCK_BUTTON_Y;
+        i = this.leftPos + LOCK_BUTTON_X;
+        j = this.topPos + LOCK_BUTTON_Y;
         if (mouseX >= (double)i && mouseX < (double)(i + LOCK_BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + LOCK_BUTTON_HEIGHT)) {
             if (this.menu.isRecipeLocked()) {
                 this.menu.setRecipeLocked(false);

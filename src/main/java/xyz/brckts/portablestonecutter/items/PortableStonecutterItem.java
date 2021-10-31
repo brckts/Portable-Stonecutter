@@ -100,12 +100,12 @@ public class PortableStonecutterItem extends Item {
                 case NORMAL:
                 default:
                     toReplace = new ArrayList<>();
-                    toReplace.add(pos);
+                    if (world.getBlockState(pos).getBlock().equals(Block.byItem(inputItem))) toReplace.add(pos);
                     break;
             }
         } else {
             toReplace = new ArrayList<>();
-            toReplace.add(pos);
+            if (world.getBlockState(pos).getBlock().equals(Block.byItem(inputItem))) toReplace.add(pos);
         }
 
 

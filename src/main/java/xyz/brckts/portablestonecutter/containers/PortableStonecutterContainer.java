@@ -24,6 +24,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.items.PortableStonecutterItem;
+import xyz.brckts.portablestonecutter.network.MessageLockRecipe;
+import xyz.brckts.portablestonecutter.network.NetworkHandler;
 import xyz.brckts.portablestonecutter.util.NBTHelper;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
@@ -117,6 +119,10 @@ public class PortableStonecutterContainer extends Container {
 
     private void updateRecipeResultSlot() {
         if (!this.recipes.isEmpty() && this.isRecipeIdValid(this.selectedRecipe.get())) {
+            if (!this.recipes.get(this.selectedRecipe.get()).equals(this.lockedRecipe)) {
+                this.setRecipeLocked(false);
+                NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.getSelectedRecipe(), false));
+            }
             StonecuttingRecipe stonecuttingrecipe = this.recipes.get(this.selectedRecipe.get());
             this.inventory.setRecipeUsed(stonecuttingrecipe);
             this.outputInventorySlot.set(stonecuttingrecipe.assemble(this.inputInventory));
@@ -196,17 +202,24 @@ public class PortableStonecutterContainer extends Container {
         return false;
     }
 
-    //TODO: If no input item but locked recipe: craft locked recipe
     public void craftAll(PlayerEntity player) {
 
+        ItemStack output;
+        Item input;
+
         if(!isRecipeIdValid(this.selectedRecipe.get())) {
-            return;
+            if (this.recipeLocked) {
+                output = this.lockedRecipe.getResultItem();
+                input = this.lockedInput;            }
+            else return;
+        } else {
+            output = this.recipes.get(this.selectedRecipe.get()).getResultItem();
+            input = this.itemStackInput.getItem();
         }
 
-        ItemStack output = this.recipes.get(this.selectedRecipe.get()).getResultItem();
         int inputCnt = inputInventorySlot.getItem().getCount();
         for(ItemStack itemStack : player.inventory.items) {
-            if (itemStack.sameItemStackIgnoreDurability(this.itemStackInput) &&
+            if (itemStack.sameItemStackIgnoreDurability(new ItemStack(input)) &&
                     (NBTUtil.compareNbt(itemStackInput.getTag(), itemStack.getTag(), false))) {
                 inputCnt += itemStack.getCount();
                 itemStack.setCount(0);
@@ -221,16 +234,23 @@ public class PortableStonecutterContainer extends Container {
 
     public void craft64(PlayerEntity player) {
 
-        if(!isRecipeIdValid(this.selectedRecipe.get())) {
-            return;
-        }
+        ItemStack output;
+        Item input;
 
-        ItemStack output = this.recipes.get(this.selectedRecipe.get()).getResultItem();
+        if(!isRecipeIdValid(this.selectedRecipe.get())) {
+            if (this.recipeLocked) {
+                output = this.lockedRecipe.getResultItem();
+                input = this.lockedInput;            }
+            else return;
+        } else {
+            output = this.recipes.get(this.selectedRecipe.get()).getResultItem();
+            input = this.itemStackInput.getItem();
+        }
 
         int toConvert = 64;
         for (int i = 0; i < player.inventory.getContainerSize() && toConvert > 0 ; ++i) {
             ItemStack stack = player.inventory.getItem(i);
-            if(this.itemStackInput.sameItemStackIgnoreDurability(stack)) {
+            if(stack.sameItemStackIgnoreDurability(new ItemStack(input))) {
                 if (toConvert >= stack.getCount()) {
                     toConvert -= stack.getCount();
                     player.inventory.setItem(i, ItemStack.EMPTY);
@@ -355,10 +375,6 @@ public class PortableStonecutterContainer extends Container {
                 this.recipeLocked = false;
             }
         }
-    }
-
-    public void toggleRecipeLock() {
-        this.recipeLocked = !this.recipeLocked;
     }
 
     public void setRecipeLocked(boolean lock) {

@@ -32,7 +32,7 @@ public class EnderPortableStonecutterItem extends PortableStonecutterItem {
 
         if (playerIn.isCrouching()) {
             nextEPSCMode(stack);
-            playerIn.displayClientMessage(new TranslationTextComponent("info.portable_stonecutter.epsc.mode." + getMode(stack).name().toLowerCase(), TextFormatting.RED), true);
+            playerIn.displayClientMessage(new TranslationTextComponent("info.portable_stonecutter.epsc.mode." + getMode(stack).name().toLowerCase(), TextFormatting.RED).withStyle(TextFormatting.LIGHT_PURPLE), true);
             return ActionResult.success(stack);
         }
 
