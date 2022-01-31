@@ -10,13 +10,14 @@ import net.minecraft.item.crafting.ShapedRecipe;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.Dimension;
 import net.minecraft.world.World;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 import xyz.brckts.portablestonecutter.api.IAnvilFlatteningRecipe;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,11 +26,21 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
     private final ResourceLocation id;
     private final ItemStack output;
     private final NonNullList<Ingredient> inputs;
+    private final ResourceLocation allowedDim;
 
+    // TODO: Implement required dimension for recipe
     public RecipeAnvilFlattening(ResourceLocation id, ItemStack output, Ingredient... inputs) {
         this.id = id;
         this.output = output;
         this.inputs = NonNullList.of(Ingredient.EMPTY, inputs);
+        this.allowedDim = null;
+    }
+
+    public RecipeAnvilFlattening(ResourceLocation id, ResourceLocation allowedDim, ItemStack output, Ingredient... inputs) {
+        this.id = id;
+        this.output = output;
+        this.inputs = NonNullList.of(Ingredient.EMPTY, inputs);
+        this.allowedDim = allowedDim;
     }
 
     @Override
@@ -81,6 +92,10 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
         return this.output;
     }
 
+    public ResourceLocation getAllowedDim() {
+        return this.allowedDim;
+    }
+
     @Override
     public NonNullList<Ingredient> getIngredients() {
         return this.inputs;
@@ -100,13 +115,26 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
 
         @Override
         public RecipeAnvilFlattening fromJson(ResourceLocation recipeId, JsonObject json) {
+            ResourceLocation allowedDim;
+
+            if (json.has("allowed_dim")) {
+                String dim = JSONUtils.getAsString(json, "allowed_dim");
+                if (dim.isEmpty()) {
+                    allowedDim = null;
+                } else {
+                    allowedDim = ResourceLocation.tryParse(dim);
+                }
+            } else {
+                allowedDim = null;
+            }
+
             ItemStack ouput = ShapedRecipe.itemFromJson(JSONUtils.getAsJsonObject(json, "output"));
             JsonArray ingrs = JSONUtils.getAsJsonArray(json, "ingredients");
             List<Ingredient> inputs = new ArrayList<>();
             for (JsonElement e : ingrs) {
                 inputs.add(Ingredient.fromJson(e));
             }
-            return new RecipeAnvilFlattening(recipeId, ouput, inputs.toArray(new Ingredient[0]));
+            return new RecipeAnvilFlattening(recipeId, allowedDim, ouput, inputs.toArray(new Ingredient[0]));
         }
 
         @Override
@@ -116,7 +144,8 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
                 inputs[i] = Ingredient.fromNetwork(buf);
             }
             ItemStack output = buf.readItem();
-            return new RecipeAnvilFlattening(recipeId, output, inputs);
+            ResourceLocation allowedDim = buf.readResourceLocation();
+            return new RecipeAnvilFlattening(recipeId, allowedDim, output, inputs);
         }
 
         @Override
@@ -126,6 +155,7 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
                 input.toNetwork(buf);
             }
             buf.writeItemStack(recipe.getResultItem(), false);
+            buf.writeResourceLocation(recipe.getAllowedDim());
         }
     }
 }

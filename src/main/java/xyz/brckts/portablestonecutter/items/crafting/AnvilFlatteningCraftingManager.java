@@ -6,9 +6,11 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.Dimension;
 import net.minecraft.world.World;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
+import net.minecraftforge.registries.RegistryManager;
 import xyz.brckts.portablestonecutter.api.IAnvilFlatteningRecipe;
 
 import java.util.ArrayList;
@@ -40,6 +42,10 @@ public class AnvilFlatteningCraftingManager {
         }
 
         IAnvilFlatteningRecipe recipe = recipeOptional.get();
+
+        if (recipe.getAllowedDim() != null && !world.dimension().location().equals(recipe.getAllowedDim())) {
+            return;
+        }
 
         NonNullList<Ingredient> ingredients = recipe.getIngredients();
         List<Ingredient> ingredientsMissing = new ArrayList<>(ingredients);

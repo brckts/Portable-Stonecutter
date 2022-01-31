@@ -10,5 +10,6 @@
   ],
   "output":  {
     "item": "portable_stonecutter:ender_portable_stonecutter"
-  }
+  },
+  "allowed_dim": "minecraft:the_end"
 }

@@ -4,6 +4,7 @@ import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeSerializer;
+import net.minecraft.world.Dimension;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.EventBus;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -36,7 +37,6 @@ public class PortableStonecutter
     }
 
     private void setup(final FMLCommonSetupEvent event) {
-
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {

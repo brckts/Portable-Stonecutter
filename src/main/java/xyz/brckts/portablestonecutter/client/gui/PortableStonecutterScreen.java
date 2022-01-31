@@ -104,7 +104,7 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         int lastShownRecipeIndex = this.recipeIndexOffset + RESULTS_MAX;
         this.drawRecipeFrames(matrixStack, mouseX, mouseY, recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
         this.drawRecipesItems(recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
-        if (this.menu.isRecipeLocked()) this.drawLockedItem();
+        if (this.menu.isRecipeLocked()) this.drawLockedItem(matrixStack);
     }
     private void drawRecipeFrames(MatrixStack matrixStack, int mouseX, int mouseY, int recipeAreaStartX, int recipeAreaStartY, int lastShownRecipeIndex) {
         for(int i = this.recipeIndexOffset; i < lastShownRecipeIndex && i < this.menu.getRecipeListSize(); ++i) {
@@ -163,12 +163,10 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
     }
 
     //TODO: Render transparent
-    private void drawLockedItem() {
+    private void drawLockedItem(MatrixStack ms) {
         if (this.menu.getLockedRecipe() != null && this.menu.getLockedInput() != null) {
-            this.minecraft.getItemRenderer().renderGuiItem(new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y);
-            this.minecraft.getItemRenderer().renderGuiItem(this.menu.getLockedRecipe().getResultItem(), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y);
-            //RenderHelper.renderGuiItemWithAlpha(new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y, 0.3F);
-            //RenderHelper.renderGuiItemWithAlpha(this.menu.getLockedRecipe().getResultItem(), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y, 0.3F);
+            RenderHelper.renderGhostItem(ms, this.minecraft, new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y);
+            RenderHelper.renderGhostItem(ms, this.minecraft, this.menu.getLockedRecipe().getResultItem(), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y);
         }
     }
 

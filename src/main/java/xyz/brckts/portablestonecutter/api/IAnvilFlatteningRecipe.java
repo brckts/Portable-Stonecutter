@@ -17,4 +17,6 @@ public interface IAnvilFlatteningRecipe extends IRecipe<RecipeWrapper> {
     default IRecipeType<?> getType() {
         return Registry.RECIPE_TYPE.getOptional(TYPE_ID).get();
     }
+
+    ResourceLocation getAllowedDim();
 }

@@ -10,7 +10,9 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.Dimension;
 import net.minecraft.world.World;
+import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
 public class EnderPortableStonecutterItem extends PortableStonecutterItem {
@@ -32,7 +34,7 @@ public class EnderPortableStonecutterItem extends PortableStonecutterItem {
 
         if (playerIn.isCrouching()) {
             nextEPSCMode(stack);
-            playerIn.displayClientMessage(new TranslationTextComponent("info.portable_stonecutter.epsc.mode." + getMode(stack).name().toLowerCase(), TextFormatting.RED).withStyle(TextFormatting.LIGHT_PURPLE), true);
+            playerIn.displayClientMessage(new TranslationTextComponent("info.portable_stonecutter.epsc.mode." + getMode(stack).name().toLowerCase(), TextFormatting.RED).withStyle(TextFormatting.DARK_GREEN), true);
             return ActionResult.success(stack);
         }
 

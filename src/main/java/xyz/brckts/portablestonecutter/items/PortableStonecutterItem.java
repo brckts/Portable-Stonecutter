@@ -108,12 +108,12 @@ public class PortableStonecutterItem extends Item {
             if (world.getBlockState(pos).getBlock().equals(Block.byItem(inputItem))) toReplace.add(pos);
         }
 
-
         BlockState outputState = outputBlock.getStateForPlacement(new BlockItemUseContext(new ItemUseContext(player, Hand.MAIN_HAND, blockRayTraceResult)));
 
         for (BlockPos blockPos : toReplace) {
+            BlockState inputState = world.getBlockState(blockPos);
             world.setBlockAndUpdate(blockPos, outputState);
-            world.levelEvent(2001, blockPos, Block.getId(outputState));
+            world.levelEvent(2001, blockPos, Block.getId(inputState));
 
             if (outputCnt > 1) {
                 player.drop(new ItemStack(recipe.getResultItem().getItem(), outputCnt - 1), true, true);
