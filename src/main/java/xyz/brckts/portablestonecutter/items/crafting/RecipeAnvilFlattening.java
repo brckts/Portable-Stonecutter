@@ -28,7 +28,6 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
     private final NonNullList<Ingredient> inputs;
     private final ResourceLocation allowedDim;
 
-    // TODO: Implement required dimension for recipe
     public RecipeAnvilFlattening(ResourceLocation id, ItemStack output, Ingredient... inputs) {
         this.id = id;
         this.output = output;
@@ -44,7 +43,7 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
     }
 
     @Override
-    public boolean matches(RecipeWrapper inv, World worldIn) {
+    public boolean matches(RecipeWrapper inv, World world) {
         List<Ingredient> ingredientsMissing = new ArrayList<>(inputs);
 
         for (int i = 0; i < inv.getContainerSize(); i++) {

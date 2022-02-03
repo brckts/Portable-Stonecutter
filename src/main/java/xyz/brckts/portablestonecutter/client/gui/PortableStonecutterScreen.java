@@ -162,7 +162,6 @@ public class PortableStonecutterScreen extends ContainerScreen<PortableStonecutt
         }
     }
 
-    //TODO: Render transparent
     private void drawLockedItem(MatrixStack ms) {
         if (this.menu.getLockedRecipe() != null && this.menu.getLockedInput() != null) {
             RenderHelper.renderGhostItem(ms, this.minecraft, new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y);
