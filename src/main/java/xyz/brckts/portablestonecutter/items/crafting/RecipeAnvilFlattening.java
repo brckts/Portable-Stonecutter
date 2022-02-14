@@ -14,6 +14,7 @@ import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
 import net.minecraftforge.registries.ForgeRegistryEntry;
+import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.api.IAnvilFlatteningRecipe;
 
 import java.util.ArrayList;
@@ -114,6 +115,7 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
         public RecipeAnvilFlattening fromJson(ResourceLocation recipeId, JsonObject json) {
             ResourceLocation allowedDim;
 
+            PortableStonecutter.LOGGER.debug("LOADING RECIPE " + recipeId.toString() + "!!");
             if (json.has("allowed_dim")) {
                 String dim = GsonHelper.getAsString(json, "allowed_dim");
                 if (dim.isEmpty()) {
