@@ -27,13 +27,6 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
     private final NonNullList<Ingredient> inputs;
     private final ResourceLocation allowedDim;
 
-    public RecipeAnvilFlattening(ResourceLocation id, ItemStack output, Ingredient... inputs) {
-        this.id = id;
-        this.output = output;
-        this.inputs = NonNullList.of(Ingredient.EMPTY, inputs);
-        this.allowedDim = null;
-    }
-
     public RecipeAnvilFlattening(ResourceLocation id, ResourceLocation allowedDim, ItemStack output, Ingredient... inputs) {
         this.id = id;
         this.output = output;

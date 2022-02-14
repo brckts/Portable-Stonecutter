@@ -15,25 +15,25 @@ import xyz.brckts.portablestonecutter.api.IAnvilFlatteningRecipe;
 //TODO: FIX RECIPES
 public class ModRecipeTypes {
 
-    public static final ModRecipeType<IAnvilFlatteningRecipe> ANVIL_FLATTENING_TYPE = registerType(IAnvilFlatteningRecipe.TYPE_ID);
+    public static final RecipeType<IAnvilFlatteningRecipe> ANVIL_FLATTENING_TYPE = registerType(IAnvilFlatteningRecipe.TYPE_ID);
     public static final RecipeSerializer<RecipeAnvilFlattening> ANVIL_FLATTENING_RECIPE_SERIALIZER = new RecipeAnvilFlattening.Serializer();
 
     public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS = DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, PortableStonecutter.MOD_ID);
 
-    public static final RegistryObject<RecipeSerializer<?>> ANVIL_FLATTENING_SERIALIZER = RECIPE_SERIALIZERS.register("anvil_flattening", () -> ANVIL_FLATTENING_RECIPE_SERIALIZER);
+    public static final RegistryObject<RecipeSerializer<?>> ANVIL_FLATTENING_SERIALIZER = RECIPE_SERIALIZERS.register("anvil_flattening", RecipeAnvilFlattening.Serializer::new);
 
-    private static class ModRecipeType<T extends Recipe<?>> implements RecipeType<T> {
-        @Override
-        public String toString() {
-            return Registry.RECIPE_TYPE.getKey(this).toString();
-        }
-    }
-
-    private static <T extends RecipeType> T registerType(ResourceLocation recipeTypeId) {
-        return (T) Registry.register(Registry.RECIPE_TYPE, recipeTypeId, new ModRecipeType<>());
+    private static <T extends Recipe<?>> RecipeType<T> registerType(ResourceLocation recipeTypeId) {
+        return Registry.register(Registry.RECIPE_TYPE, recipeTypeId, new RecipeType<T>()
+        {
+            @Override
+            public String toString() {
+                return recipeTypeId.toString();
+            }
+        });
     }
 
     public static void init() {
         RECIPE_SERIALIZERS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        PortableStonecutter.LOGGER.debug("REGISTERED RECIPETYPE " + ANVIL_FLATTENING_TYPE);
     }
 }
