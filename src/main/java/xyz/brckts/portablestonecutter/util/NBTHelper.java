@@ -1,26 +1,26 @@
 package xyz.brckts.portablestonecutter.util;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.StonecuttingRecipe;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.StonecutterRecipe;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.RegistryManager;
 
 import java.util.List;
 
 public class NBTHelper {
-    private static void clearTags(PlayerEntity player) {
+    private static void clearTags(Player player) {
         ItemStack stack = player.getMainHandItem();
         stack.setTag(null);
     }
 
-    public static StonecuttingRecipe getRecipeFromNBT(World world, CompoundNBT nbt) {
+    public static StonecutterRecipe getRecipeFromNBT(Level world, CompoundTag nbt) {
         if(nbt == null || !nbt.contains("item") || !nbt.contains("recipeId")) {
             return null;
         }
@@ -29,10 +29,10 @@ public class NBTHelper {
 
         Item inputItem = getInputItemFromNBT(nbt);
 
-        IInventory inputInventory = new Inventory(1);
+        Container inputInventory = new SimpleContainer(1);
         inputInventory.setItem(0, new ItemStack(inputItem));
 
-        List<StonecuttingRecipe> recipes = world.getRecipeManager().getRecipesFor(IRecipeType.STONECUTTING, inputInventory, world);
+        List<StonecutterRecipe> recipes = world.getRecipeManager().getRecipesFor(RecipeType.STONECUTTING, inputInventory, world);
 
         if(recipeId >= recipes.size()) {
             nbt.remove("recipeId");
@@ -42,18 +42,18 @@ public class NBTHelper {
         return recipes.get(recipeId);
     }
 
-    public static Item getInputItemFromNBT(CompoundNBT nbt) {
+    public static Item getInputItemFromNBT(CompoundTag nbt) {
         if (nbt == null || !nbt.contains("item")) {
             return null;
         }
 
         ResourceLocation inputItemRL = new ResourceLocation(nbt.getString("item"));
 
-        if(!GameRegistry.findRegistry(Item.class).containsKey(inputItemRL)) {
+        if(!RegistryManager.ACTIVE.getRegistry(Item.class).containsKey(inputItemRL)) {
             nbt.remove("item");
             return null;
         }
 
-        return GameRegistry.findRegistry(Item.class).getValue(inputItemRL);
+        return RegistryManager.ACTIVE.getRegistry(Item.class).getValue(inputItemRL);
     }
 }

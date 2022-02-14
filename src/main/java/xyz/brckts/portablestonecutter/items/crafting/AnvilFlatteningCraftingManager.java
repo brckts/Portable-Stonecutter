@@ -1,16 +1,14 @@
 package xyz.brckts.portablestonecutter.items.crafting;
 
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Dimension;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
-import net.minecraftforge.registries.RegistryManager;
 import xyz.brckts.portablestonecutter.api.IAnvilFlatteningRecipe;
 
 import java.util.ArrayList;
@@ -19,12 +17,12 @@ import java.util.Optional;
 
 public class AnvilFlatteningCraftingManager {
 
-    public static void craft(World world, BlockPos pos) {
+    public static void craft(Level world, BlockPos pos) {
         if (world.isClientSide()) {
             return;
         }
 
-        List<ItemEntity> itemEntityList = world.getEntitiesOfClass(ItemEntity.class, new AxisAlignedBB(pos));
+        List<ItemEntity> itemEntityList = world.getEntitiesOfClass(ItemEntity.class, new AABB(pos));
         NonNullList<ItemStack> itemStacks = NonNullList.create();
 
         for(ItemEntity ie : itemEntityList) {

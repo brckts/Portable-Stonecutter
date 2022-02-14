@@ -1,29 +1,29 @@
 package xyz.brckts.portablestonecutter.items;
 
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.inventory.container.SimpleNamedContainerProvider;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.item.crafting.StonecuttingRecipe;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.crafting.StonecutterRecipe;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -40,33 +40,33 @@ import static xyz.brckts.portablestonecutter.util.NBTHelper.getRecipeFromNBT;
 
 @Mod.EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class PortableStonecutterItem extends Item {
-    private static final ITextComponent CONTAINER_NAME = new TranslationTextComponent("container.portable_stonecutter");
+    private static final Component CONTAINER_NAME = new TranslatableComponent("container.portable_stonecutter");
     public PortableStonecutterItem() {
         super(new Item.Properties().tab(PortableStonecutter.TAB).stacksTo(1));
     }
 
     @Override
-    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         if(!worldIn.isClientSide()) {
             //clearTags(playerIn);
             playerIn.openMenu(this.getContainer(worldIn, playerIn));
             playerIn.awardStat(Stats.INTERACT_WITH_STONECUTTER);
             return super.use(worldIn, playerIn, handIn);
         } else {
-            return ActionResult.success(playerIn.getItemInHand(handIn));
+            return InteractionResultHolder.success(playerIn.getItemInHand(handIn));
         }
     }
 
     @SubscribeEvent
     public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
 
-        World world = event.getWorld();
+        Level world = event.getWorld();
         BlockPos pos = event.getPos();
         if(world.isClientSide()) {
             return;
         }
 
-        ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
+        ServerPlayer player = (ServerPlayer) event.getPlayer();
 
         ItemStack is = event.getItemStack();
 
@@ -74,8 +74,8 @@ public class PortableStonecutterItem extends Item {
             return;
         }
 
-        CompoundNBT nbt = is.getTag();
-        StonecuttingRecipe recipe = getRecipeFromNBT(world, nbt);
+        CompoundTag nbt = is.getTag();
+        StonecutterRecipe recipe = getRecipeFromNBT(world, nbt);
         Item inputItem = getInputItemFromNBT(nbt);
 
         if (recipe == null) return;
@@ -85,7 +85,7 @@ public class PortableStonecutterItem extends Item {
 
         if(outputBlock == Blocks.AIR) return;
 
-        BlockRayTraceResult blockRayTraceResult = getPlayerPOVHitResult(world, player, RayTraceContext.FluidMode.ANY);
+        BlockHitResult blockRayTraceResult = getPlayerPOVHitResult(world, player, ClipContext.Fluid.ANY);
 
         List<BlockPos> toReplace;
 
@@ -108,7 +108,7 @@ public class PortableStonecutterItem extends Item {
             if (world.getBlockState(pos).getBlock().equals(Block.byItem(inputItem))) toReplace.add(pos);
         }
 
-        BlockState outputState = outputBlock.getStateForPlacement(new BlockItemUseContext(new ItemUseContext(player, Hand.MAIN_HAND, blockRayTraceResult)));
+        BlockState outputState = outputBlock.getStateForPlacement(new BlockPlaceContext(new UseOnContext(player, InteractionHand.MAIN_HAND, blockRayTraceResult)));
 
         for (BlockPos blockPos : toReplace) {
             BlockState inputState = world.getBlockState(blockPos);
@@ -121,7 +121,7 @@ public class PortableStonecutterItem extends Item {
         }
     }
 
-    private static List<BlockPos> toReplaceThreeByThree(World world, Block validBlock, BlockPos pos, Direction direction) {
+    private static List<BlockPos> toReplaceThreeByThree(Level world, Block validBlock, BlockPos pos, Direction direction) {
         Stream<BlockPos> toReplaceStream;
 
         switch (direction.getAxis()) {
@@ -143,13 +143,13 @@ public class PortableStonecutterItem extends Item {
                 .collect(Collectors.toList());
     }
 
-    private static List<BlockPos> toReplaceLine(World world, Block validBlock, BlockPos pos, Direction direction, int range) {
+    private static List<BlockPos> toReplaceLine(Level world, Block validBlock, BlockPos pos, Direction direction, int range) {
         return BlockPos.betweenClosedStream(pos, pos.relative(direction, -range)).map(BlockPos::immutable)
                 .filter(blockPos -> world.getBlockState(blockPos).getBlock().equals(validBlock))
                 .collect(Collectors.toList());
     }
 
-    public INamedContainerProvider getContainer(World worldIn, PlayerEntity playerIn) {
-        return new SimpleNamedContainerProvider((id, inventory, player) -> new PortableStonecutterContainer(id, inventory), CONTAINER_NAME);
+    public MenuProvider getContainer(Level worldIn, Player playerIn) {
+        return new SimpleMenuProvider((id, inventory, player) -> new PortableStonecutterContainer(id, inventory), CONTAINER_NAME);
     }
 }

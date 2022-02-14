@@ -3,17 +3,15 @@ package xyz.brckts.portablestonecutter.items.crafting;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.ShapedRecipe;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.Dimension;
-import net.minecraft.world.World;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 import xyz.brckts.portablestonecutter.api.IAnvilFlatteningRecipe;
@@ -43,7 +41,7 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
     }
 
     @Override
-    public boolean matches(RecipeWrapper inv, World world) {
+    public boolean matches(RecipeWrapper inv, Level world) {
         List<Ingredient> ingredientsMissing = new ArrayList<>(inputs);
 
         for (int i = 0; i < inv.getContainerSize(); i++) {
@@ -106,18 +104,18 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getSerializer() {
         return ModRecipeTypes.ANVIL_FLATTENING_SERIALIZER.get();
     }
 
-    public static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<RecipeAnvilFlattening> {
+    public static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<RecipeAnvilFlattening> {
 
         @Override
         public RecipeAnvilFlattening fromJson(ResourceLocation recipeId, JsonObject json) {
             ResourceLocation allowedDim;
 
             if (json.has("allowed_dim")) {
-                String dim = JSONUtils.getAsString(json, "allowed_dim");
+                String dim = GsonHelper.getAsString(json, "allowed_dim");
                 if (dim.isEmpty()) {
                     allowedDim = null;
                 } else {
@@ -127,17 +125,17 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
                 allowedDim = null;
             }
 
-            ItemStack ouput = ShapedRecipe.itemFromJson(JSONUtils.getAsJsonObject(json, "output"));
-            JsonArray ingrs = JSONUtils.getAsJsonArray(json, "ingredients");
+            ItemStack output = ShapedRecipe.itemStackFromJson(GsonHelper.getAsJsonObject(json, "output"));
+            JsonArray ingrs = GsonHelper.getAsJsonArray(json, "ingredients");
             List<Ingredient> inputs = new ArrayList<>();
             for (JsonElement e : ingrs) {
                 inputs.add(Ingredient.fromJson(e));
             }
-            return new RecipeAnvilFlattening(recipeId, allowedDim, ouput, inputs.toArray(new Ingredient[0]));
+            return new RecipeAnvilFlattening(recipeId, allowedDim, output, inputs.toArray(new Ingredient[0]));
         }
 
         @Override
-        public RecipeAnvilFlattening fromNetwork(ResourceLocation recipeId, PacketBuffer buf) {
+        public RecipeAnvilFlattening fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buf) {
             Ingredient[] inputs = new Ingredient[buf.readVarInt()];
             for (int i = 0; i < inputs.length; i++) {
                 inputs[i] = Ingredient.fromNetwork(buf);
@@ -148,7 +146,7 @@ public class RecipeAnvilFlattening implements IAnvilFlatteningRecipe {
         }
 
         @Override
-        public void toNetwork(PacketBuffer buf, RecipeAnvilFlattening recipe) {
+        public void toNetwork(FriendlyByteBuf buf, RecipeAnvilFlattening recipe) {
             buf.writeVarInt(recipe.getIngredients().size());
             for (Ingredient input : recipe.getIngredients()) {
                 input.toNetwork(buf);

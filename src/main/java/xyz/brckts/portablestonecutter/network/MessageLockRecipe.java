@@ -1,8 +1,8 @@
 package xyz.brckts.portablestonecutter.network;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkEvent;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
 import java.util.function.Supplier;
@@ -16,13 +16,13 @@ public class MessageLockRecipe {
         this.lockStatus = lockStatus;
     }
 
-    public static MessageLockRecipe decode(PacketBuffer buf) {
+    public static MessageLockRecipe decode(FriendlyByteBuf buf) {
         int recipeIndex = buf.readInt();
         boolean lockStatus = buf.readBoolean();
         return new MessageLockRecipe(recipeIndex, lockStatus);
     }
 
-    public static void encode(MessageLockRecipe message, PacketBuffer buf) {
+    public static void encode(MessageLockRecipe message, FriendlyByteBuf buf) {
         buf.writeInt(message.recipeIndex);
         buf.writeBoolean(message.lockStatus);
     }
@@ -31,7 +31,7 @@ public class MessageLockRecipe {
         NetworkEvent.Context context = contextSupplier.get();
 
         context.enqueueWork(() -> {
-            ServerPlayerEntity player = context.getSender();
+            ServerPlayer player = context.getSender();
             if (player == null) {
                 return;
             }

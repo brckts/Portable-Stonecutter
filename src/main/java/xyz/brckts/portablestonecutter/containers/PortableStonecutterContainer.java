@@ -1,28 +1,26 @@
 package xyz.brckts.portablestonecutter.containers;
 
 import com.google.common.collect.Lists;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.CraftResultInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.StonecuttingRecipe;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.IntReferenceHolder;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.DataSlot;
+import net.minecraft.world.inventory.ResultContainer;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.StonecutterRecipe;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.items.PortableStonecutterItem;
 import xyz.brckts.portablestonecutter.network.MessageLockRecipe;
 import xyz.brckts.portablestonecutter.network.NetworkHandler;
@@ -33,38 +31,43 @@ import java.util.List;
 
 import static xyz.brckts.portablestonecutter.util.InventoryUtils.addOrDrop;
 
-public class PortableStonecutterContainer extends Container {
+public class PortableStonecutterContainer extends AbstractContainerMenu {
 
-    private Runnable inventoryUpdateListener = () -> {
+    public static final int INPUT_SLOT = 0;
+    public static final int RESULT_SLOT = 1;
+    private static final int INV_SLOT_START = 2;
+    private static final int INV_SLOT_END = 29;
+    private static final int USE_ROW_SLOT_START = 29;
+    private static final int USE_ROW_SLOT_END = 38;
+    private List<StonecutterRecipe> recipes = Lists.newArrayList();
+    private final DataSlot selectedRecipe = DataSlot.standalone();
+    private final Level world;
+    private ItemStack itemStackInput = ItemStack.EMPTY;
+    /** The inventory that stores the output of the crafting recipe. */
+    private final ResultContainer inventory = new ResultContainer();
+    final Slot inputInventorySlot;
+    /** The inventory slot that stores the output of the crafting recipe. */
+    final Slot outputInventorySlot;
+    private boolean recipeLocked;
+    private StonecutterRecipe lockedRecipe;
+    private Item lockedInput;
+
+    private Runnable slotUpdateListener = () -> {
     };
-    public final IInventory inputInventory = new Inventory(1) {
+    public final Container container = new SimpleContainer(1) {
         /**
          * For tile entities, ensures the chunk containing the tile entity is saved to disk later - the game won't think
          * it hasn't changed and skip it.
          */
         public void setChanged() {
             super.setChanged();
-            PortableStonecutterContainer.this.onCraftMatrixChanged(this);
-            PortableStonecutterContainer.this.inventoryUpdateListener.run();
+            PortableStonecutterContainer.this.slotsChanged(this);
+            PortableStonecutterContainer.this.slotUpdateListener.run();
         }
     };
-    private List<StonecuttingRecipe> recipes = Lists.newArrayList();
-    private final IntReferenceHolder selectedRecipe = IntReferenceHolder.standalone();
-    private final World world;
-    private ItemStack itemStackInput = ItemStack.EMPTY;
-    /** The inventory that stores the output of the crafting recipe. */
-    private final CraftResultInventory inventory = new CraftResultInventory();
-    final Slot inputInventorySlot;
-    /** The inventory slot that stores the output of the crafting recipe. */
-    final Slot outputInventorySlot;
-    private boolean recipeLocked;
-    private StonecuttingRecipe lockedRecipe;
-    private Item lockedInput;
+    final ResultContainer resultContainer = new ResultContainer();
 
-    public PortableStonecutterContainer(int windowId, PlayerInventory playerInventory, PacketBuffer extraData) {
-        this(windowId, playerInventory);
-    }
-    public PortableStonecutterContainer(int windowIdIn, PlayerInventory playerInventoryIn) {
+    public PortableStonecutterContainer(int windowIdIn, Inventory playerInventoryIn) {
         super(RegistryHandler.PORTABLE_STONECUTTER_CONTAINER.get(), windowIdIn);
 
         int startX = 8, inY = 8;
@@ -73,7 +76,7 @@ public class PortableStonecutterContainer extends Container {
         int startPlayerInvY = 84;
         int hotbarY = 142;
 
-        CompoundNBT nbt = playerInventoryIn.getSelected().getTag();
+        CompoundTag nbt = playerInventoryIn.getSelected().getTag();
 
         if (nbt == null || !nbt.contains("item") || !nbt.contains("recipeId")) {
             this.recipeLocked = false;
@@ -85,20 +88,20 @@ public class PortableStonecutterContainer extends Container {
         }
 
         this.world = playerInventoryIn.player.level;
-        this.inputInventorySlot = this.addSlot(new Slot(inputInventory, 0, startX + 4, inY + 4));
-        this.outputInventorySlot = this.addSlot(new Slot(inventory, 1, startX + 4, outY + 4) {
+        this.inputInventorySlot = this.addSlot(new Slot(this.container, 0, startX + 4, inY + 4));
+        this.outputInventorySlot = this.addSlot(new Slot(this.resultContainer, 1, startX + 4, outY + 4) {
             public boolean mayPlace(ItemStack stack) {
                 return false;
             }
 
-            public ItemStack onTake(PlayerEntity thePlayer, ItemStack stack) {
+            public void onTake(Player thePlayer, ItemStack stack) {
                 stack.onCraftedBy(thePlayer.level, thePlayer, stack.getCount());
                 PortableStonecutterContainer.this.inventory.awardUsedRecipes(thePlayer);
                 ItemStack itemstack = PortableStonecutterContainer.this.inputInventorySlot.remove(1);
                 if (!itemstack.isEmpty()) {
                     PortableStonecutterContainer.this.updateRecipeResultSlot();
                 }
-                return super.onTake(thePlayer, stack);
+                super.onTake(thePlayer, stack);
             }
 
         });
@@ -123,9 +126,9 @@ public class PortableStonecutterContainer extends Container {
                 this.setRecipeLocked(false);
                 NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.getSelectedRecipe(), false));
             }
-            StonecuttingRecipe stonecuttingrecipe = this.recipes.get(this.selectedRecipe.get());
-            this.inventory.setRecipeUsed(stonecuttingrecipe);
-            this.outputInventorySlot.set(stonecuttingrecipe.assemble(this.inputInventory));
+            StonecutterRecipe stonecutterrecipe = this.recipes.get(this.selectedRecipe.get());
+            this.inventory.setRecipeUsed(stonecutterrecipe);
+            this.outputInventorySlot.set(stonecutterrecipe.assemble(this.container));
         } else {
             this.outputInventorySlot.set(ItemStack.EMPTY);
         }
@@ -134,20 +137,20 @@ public class PortableStonecutterContainer extends Container {
     }
 
     @Override
-    public void removed(PlayerEntity playerIn) {
-        playerIn.addItem(this.inputInventory.removeItemNoUpdate(0));
-        playerIn.inventory.setChanged();
+    public void removed(Player playerIn) {
+        playerIn.addItem(this.container.removeItemNoUpdate(0));
+        playerIn.getInventory().setChanged();
         super.removed(playerIn);
     }
 
 
 
     @Override
-    public boolean stillValid(PlayerEntity playerIn) {
+    public boolean stillValid(Player playerIn) {
         return playerIn.getMainHandItem().getItem() instanceof PortableStonecutterItem;
     }
 
-    public ItemStack quickMoveStack(PlayerEntity playerIn, int index) {
+    public ItemStack quickMoveStack(Player playerIn, int index) {
         ItemStack itemstack = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
         if (slot != null && slot.hasItem()) {
@@ -165,7 +168,7 @@ public class PortableStonecutterContainer extends Container {
                 if (!this.moveItemStackTo(itemstack1, 2, 38, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (this.world.getRecipeManager().getRecipeFor(IRecipeType.STONECUTTING, new Inventory(itemstack1), this.world).isPresent()) {
+            } else if (this.world.getRecipeManager().getRecipeFor(RecipeType.STONECUTTING, new SimpleContainer(itemstack1), this.world).isPresent()) {
                 if (!this.moveItemStackTo(itemstack1, 0, 1, false)) {
                     return ItemStack.EMPTY;
                 }
@@ -202,7 +205,7 @@ public class PortableStonecutterContainer extends Container {
         return false;
     }
 
-    public void craftAll(PlayerEntity player) {
+    public void craftAll(Player player) {
 
         ItemStack output;
         Item input;
@@ -218,9 +221,9 @@ public class PortableStonecutterContainer extends Container {
         }
 
         int inputCnt = inputInventorySlot.getItem().getCount();
-        for(ItemStack itemStack : player.inventory.items) {
+        for(ItemStack itemStack : player.getInventory().items) {
             if (itemStack.sameItemStackIgnoreDurability(new ItemStack(input)) &&
-                    (NBTUtil.compareNbt(itemStackInput.getTag(), itemStack.getTag(), false))) {
+                    (NbtUtils.compareNbt(itemStackInput.getTag(), itemStack.getTag(), false))) {
                 inputCnt += itemStack.getCount();
                 itemStack.setCount(0);
             }
@@ -229,10 +232,10 @@ public class PortableStonecutterContainer extends Container {
         inputInventorySlot.set(ItemStack.EMPTY);
         addOrDrop(player, output, inputCnt);
         this.updateRecipeResultSlot();
-        player.inventory.setChanged();
+        player.getInventory().setChanged();
     }
 
-    public void craft64(PlayerEntity player) {
+    public void craft64(Player player) {
 
         ItemStack output;
         Item input;
@@ -248,12 +251,12 @@ public class PortableStonecutterContainer extends Container {
         }
 
         int toConvert = 64;
-        for (int i = 0; i < player.inventory.getContainerSize() && toConvert > 0 ; ++i) {
-            ItemStack stack = player.inventory.getItem(i);
+        for (int i = 0; i < player.getInventory().getContainerSize() && toConvert > 0 ; ++i) {
+            ItemStack stack = player.getInventory().getItem(i);
             if(stack.sameItemStackIgnoreDurability(new ItemStack(input))) {
                 if (toConvert >= stack.getCount()) {
                     toConvert -= stack.getCount();
-                    player.inventory.setItem(i, ItemStack.EMPTY);
+                    player.getInventory().setItem(i, ItemStack.EMPTY);
                 } else {
                     stack.setCount(stack.getCount() - toConvert);
                     toConvert = 0;
@@ -271,10 +274,10 @@ public class PortableStonecutterContainer extends Container {
         }
         addOrDrop(player, output, 64 - toConvert);
         this.updateRecipeResultSlot();
-        player.inventory.setChanged();
+        player.getInventory().setChanged();
     }
 
-    public void onRecipeLocked(int recipeId, ServerPlayerEntity player) {
+    public void onRecipeLocked(int recipeId, ServerPlayer player) {
         if (recipeId != this.selectedRecipe.get()) {
             return;
         }
@@ -284,13 +287,13 @@ public class PortableStonecutterContainer extends Container {
         }
 
         ItemStack pScStack = player.getMainHandItem();
-        CompoundNBT nbtTagCompound = pScStack.getTag();
+        CompoundTag nbtTagCompound = pScStack.getTag();
         Item inputItem = this.itemStackInput.getItem();
 
         this.updateLockData(inputItem, this.recipes.get(recipeId));
 
         if (nbtTagCompound == null) {
-            nbtTagCompound = new CompoundNBT();
+            nbtTagCompound = new CompoundTag();
             pScStack.setTag(nbtTagCompound);
         }
 
@@ -298,12 +301,12 @@ public class PortableStonecutterContainer extends Container {
         nbtTagCompound.putInt("recipeId", recipeId);
     }
 
-    public void updateLockData(Item inputItem, StonecuttingRecipe recipe) {
+    public void updateLockData(Item inputItem, StonecutterRecipe recipe) {
         this.lockedInput = inputItem;
         this.lockedRecipe = recipe;
     }
 
-    public void onRecipeUnlocked(ServerPlayerEntity player) {
+    public void onRecipeUnlocked(ServerPlayer player) {
         if(this.recipeLocked) {
             return;
         }
@@ -329,7 +332,7 @@ public class PortableStonecutterContainer extends Container {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public List<StonecuttingRecipe> getRecipeList() {
+    public List<StonecutterRecipe> getRecipeList() {
         return this.recipes;
     }
 
@@ -344,7 +347,7 @@ public class PortableStonecutterContainer extends Container {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public StonecuttingRecipe getLockedRecipe() {
+    public StonecutterRecipe getLockedRecipe() {
         return this.lockedRecipe;
     }
 
@@ -353,7 +356,7 @@ public class PortableStonecutterContainer extends Container {
         return this.lockedInput;
     }
 
-    public void onCraftMatrixChanged(IInventory inventoryIn) {
+    public void slotsChanged(Container inventoryIn) {
         ItemStack itemstack = this.inputInventorySlot.getItem();
         if (itemstack.getItem() != this.itemStackInput.getItem()) {
             this.itemStackInput = itemstack.copy();
@@ -362,12 +365,12 @@ public class PortableStonecutterContainer extends Container {
 
     }
 
-    private void updateAvailableRecipes(IInventory inventoryIn, ItemStack stack) {
+    private void updateAvailableRecipes(Container inventoryIn, ItemStack stack) {
         this.recipes.clear();
         this.selectedRecipe.set(-1);
         this.outputInventorySlot.set(ItemStack.EMPTY);
         if (!stack.isEmpty()) {
-            this.recipes = this.world.getRecipeManager().getRecipesFor(IRecipeType.STONECUTTING, inventoryIn, this.world);
+            this.recipes = this.world.getRecipeManager().getRecipesFor(RecipeType.STONECUTTING, inventoryIn, this.world);
             if (stack.getItem().equals(this.lockedInput)) {
                 this.selectedRecipe.set(this.recipes.indexOf(this.lockedRecipe));
                 this.updateRecipeResultSlot();
@@ -396,7 +399,7 @@ public class PortableStonecutterContainer extends Container {
 
     @OnlyIn(Dist.CLIENT)
     public void setInventoryUpdateListener(Runnable listenerIn) {
-        this.inventoryUpdateListener = listenerIn;
+        this.slotUpdateListener = listenerIn;
     }
 
 

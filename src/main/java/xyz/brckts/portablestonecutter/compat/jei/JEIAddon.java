@@ -8,10 +8,11 @@ import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.items.crafting.ModRecipeTypes;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
@@ -31,7 +32,7 @@ public class JEIAddon implements IModPlugin {
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         registration.addRecipes(Minecraft.getInstance().level.getRecipeManager().getAllRecipesFor(ModRecipeTypes.ANVIL_FLATTENING_TYPE), AnvilFlatteningRecipeCategory.UID);
-        registration.addIngredientInfo(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()), VanillaTypes.ITEM, I18n.get("info." + PortableStonecutter.MOD_ID + ":portable_stonecutter"));
+        registration.addIngredientInfo(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()), VanillaTypes.ITEM, new TranslatableComponent("info." + PortableStonecutter.MOD_ID + ":portable_stonecutter"));
     }
 
     @Override

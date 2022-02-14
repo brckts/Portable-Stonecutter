@@ -1,12 +1,9 @@
 package xyz.brckts.portablestonecutter;
 
-import net.minecraft.client.gui.ScreenManager;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.world.Dimension;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.EventBus;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -40,10 +37,10 @@ public class PortableStonecutter
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
-        ScreenManager.register(RegistryHandler.PORTABLE_STONECUTTER_CONTAINER.get(), PortableStonecutterScreen::new);
+        MenuScreens.register(RegistryHandler.PORTABLE_STONECUTTER_CONTAINER.get(), PortableStonecutterScreen::new);
     }
 
-    public static final ItemGroup TAB = new ItemGroup("portableStonecutter") {
+    public static final CreativeModeTab TAB = new CreativeModeTab("portableStonecutter") {
         @Override
         public ItemStack makeIcon() {
             return new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get());

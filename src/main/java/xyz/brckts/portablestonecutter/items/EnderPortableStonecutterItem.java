@@ -1,18 +1,16 @@
 package xyz.brckts.portablestonecutter.items;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.inventory.container.SimpleNamedContainerProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.Dimension;
-import net.minecraft.world.World;
-import xyz.brckts.portablestonecutter.PortableStonecutter;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
 public class EnderPortableStonecutterItem extends PortableStonecutterItem {
@@ -20,34 +18,34 @@ public class EnderPortableStonecutterItem extends PortableStonecutterItem {
     public enum Mode {
         NORMAL,
         THREE_BY_THREE,
-        LINE;
+        LINE
     }
-    private static final ITextComponent CONTAINER_NAME = new TranslationTextComponent("container.ender_portable_stonecutter");
+    private static final Component CONTAINER_NAME = new TranslatableComponent("container.ender_portable_stonecutter");
 
     public EnderPortableStonecutterItem() {
         super();
     }
 
     @Override
-    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         ItemStack stack = playerIn.getMainHandItem();
 
         if (playerIn.isCrouching()) {
             nextEPSCMode(stack);
-            playerIn.displayClientMessage(new TranslationTextComponent("info.portable_stonecutter.epsc.mode." + getMode(stack).name().toLowerCase(), TextFormatting.RED).withStyle(TextFormatting.DARK_GREEN), true);
-            return ActionResult.success(stack);
+            playerIn.displayClientMessage(new TranslatableComponent("info.portable_stonecutter.epsc.mode." + getMode(stack).name().toLowerCase(), ChatFormatting.RED).withStyle(ChatFormatting.DARK_GREEN), true);
+            return InteractionResultHolder.success(stack);
         }
 
         return super.use(worldIn, playerIn, handIn);
     }
 
     @Override
-    public INamedContainerProvider getContainer(World worldIn, PlayerEntity playerIn) {
-        return new SimpleNamedContainerProvider((id, inventory, player) -> new PortableStonecutterContainer(id, inventory), CONTAINER_NAME);
+    public MenuProvider getContainer(Level worldIn, Player playerIn) {
+        return new SimpleMenuProvider((id, inventory, player) -> new PortableStonecutterContainer(id, inventory), CONTAINER_NAME);
     }
 
     private void nextEPSCMode(ItemStack stack) {
-        CompoundNBT nbt = getNBT(stack);
+        CompoundTag nbt = getNBT(stack);
         int i = nbt.getInt("Mode") + 1;
         int j = Mode.values().length - 1;
         nbt.putInt("Mode", i > j ? 0 : i);
@@ -57,7 +55,7 @@ public class EnderPortableStonecutterItem extends PortableStonecutterItem {
         return Mode.values()[getNBT(stack).getInt("Mode")];
     }
 
-    public CompoundNBT getNBT(ItemStack stack) {
+    public CompoundTag getNBT(ItemStack stack) {
         return stack.getOrCreateTagElement("EnderPSCNBT");
     }
 }
