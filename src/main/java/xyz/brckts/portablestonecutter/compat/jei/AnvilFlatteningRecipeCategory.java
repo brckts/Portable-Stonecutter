@@ -1,15 +1,12 @@
 package xyz.brckts.portablestonecutter.compat.jei;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
-import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.recipe.IFocus;
+import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -18,14 +15,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
-import xyz.brckts.portablestonecutter.api.IAnvilFlatteningRecipe;
+import xyz.brckts.portablestonecutter.items.crafting.AnvilFlatteningRecipe;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 
-public class AnvilFlatteningRecipeCategory implements IRecipeCategory<IAnvilFlatteningRecipe> {
+public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatteningRecipe> {
 
-    public static final ResourceLocation UID = new ResourceLocation(PortableStonecutter.MOD_ID, "jei_anvil_flattening");
+    public static final RecipeType<AnvilFlatteningRecipe> RECIPE_TYPE =
+            RecipeType.create(PortableStonecutter.MOD_ID, "anvil_flattening", AnvilFlatteningRecipe.class);
+
+
     private static final ResourceLocation texture = new ResourceLocation(PortableStonecutter.MOD_ID, "textures/gui/jei_anvil_flattening.png");
 
     private final IDrawableStatic background;
@@ -35,20 +34,14 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<IAnvilFlat
 
     public AnvilFlatteningRecipeCategory(IGuiHelper guiHelper) {
         this.background = guiHelper.createBlankDrawable(90, 90);
-        this.icon = guiHelper.createDrawableIngredient(VanillaTypes.ITEM, new ItemStack(Items.ANVIL));
-        this.title = new TranslatableComponent("jei." + UID.toString());
+        this.icon = guiHelper.createDrawableItemStack(new ItemStack(Items.ANVIL));
+        this.title = new TranslatableComponent("jei." + RECIPE_TYPE.getUid());
         this.overlay = guiHelper.createDrawable(texture, 0, 0, 64, 64);
     }
 
-    @Nonnull
     @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends IAnvilFlatteningRecipe> getRecipeClass() {
-        return IAnvilFlatteningRecipe.class;
+    public RecipeType<AnvilFlatteningRecipe> getRecipeType() {
+        return RECIPE_TYPE;
     }
 
     @Nonnull
@@ -69,7 +62,8 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<IAnvilFlat
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, IAnvilFlatteningRecipe recipe, List<? extends IFocus<?>> focuses) {
+    public void setRecipe(IRecipeLayoutBuilder builder, AnvilFlatteningRecipe recipe, IFocusGroup focuses) {
+
 
         int width = 80;
         int index = 1;
@@ -85,10 +79,23 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<IAnvilFlat
     }
 
 
-    @Override
-    public void draw(IAnvilFlatteningRecipe recipe, IRecipeSlotsView recipeSlotsView, PoseStack stack, double mouseX, double mouseY) {
+    /*@Override
+    public void draw(AnvilFlatteningRecipe recipe, IRecipeSlotsView recipeSlotsView, PoseStack stack, double mouseX, double mouseY) {
         RenderSystem.enableBlend();
         overlay.draw(stack, 13, 20);
         RenderSystem.disableBlend();
+    }*/
+
+    @SuppressWarnings("removal")
+    @Override
+    public ResourceLocation getUid() {
+        return getRecipeType().getUid();
+    }
+
+
+    @SuppressWarnings("removal")
+    @Override
+    public Class<? extends AnvilFlatteningRecipe> getRecipeClass() {
+        return getRecipeType().getRecipeClass();
     }
 }

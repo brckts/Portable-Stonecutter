@@ -10,7 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.RegistryManager;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 
@@ -49,11 +49,11 @@ public class NBTHelper {
 
         ResourceLocation inputItemRL = new ResourceLocation(nbt.getString("item"));
 
-        if(!RegistryManager.ACTIVE.getRegistry(Item.class).containsKey(inputItemRL)) {
+        if(!ForgeRegistries.ITEMS.containsKey(inputItemRL)) {
             nbt.remove("item");
             return null;
         }
 
-        return RegistryManager.ACTIVE.getRegistry(Item.class).getValue(inputItemRL);
+        return ForgeRegistries.ITEMS.getValue(inputItemRL);
     }
 }

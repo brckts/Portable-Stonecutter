@@ -91,17 +91,14 @@ public class PortableStonecutterItem extends Item {
 
         if (is.getItem() instanceof EnderPortableStonecutterItem) {
             switch (((EnderPortableStonecutterItem) is.getItem()).getMode(is)) {
-                case THREE_BY_THREE:
-                    toReplace = toReplaceThreeByThree(world, Block.byItem(inputItem), pos, blockRayTraceResult.getDirection());
-                    break;
-                case LINE:
-                    toReplace = toReplaceLine(world, Block.byItem(inputItem), pos, blockRayTraceResult.getDirection(), 3);
-                    break;
-                case NORMAL:
-                default:
+                case THREE_BY_THREE ->
+                        toReplace = toReplaceThreeByThree(world, Block.byItem(inputItem), pos, blockRayTraceResult.getDirection());
+                case LINE ->
+                        toReplace = toReplaceLine(world, Block.byItem(inputItem), pos, blockRayTraceResult.getDirection(), 3);
+                default -> {
                     toReplace = new ArrayList<>();
                     if (world.getBlockState(pos).getBlock().equals(Block.byItem(inputItem))) toReplace.add(pos);
-                    break;
+                }
             }
         } else {
             toReplace = new ArrayList<>();
@@ -122,22 +119,13 @@ public class PortableStonecutterItem extends Item {
     }
 
     private static List<BlockPos> toReplaceThreeByThree(Level world, Block validBlock, BlockPos pos, Direction direction) {
-        Stream<BlockPos> toReplaceStream;
+        Stream<BlockPos> toReplaceStream = switch (direction.getAxis()) {
+            case X -> BlockPos.betweenClosedStream(pos.offset(0, -1, -1), pos.offset(0, 1, 1));
+            case Y -> BlockPos.betweenClosedStream(pos.offset(-1, 0, -1), pos.offset(1, 0, 1));
+            case Z -> BlockPos.betweenClosedStream(pos.offset(-1, -1, 0), pos.offset(1, 1, 0));
+            default -> BlockPos.betweenClosedStream(pos, pos);
+        };
 
-        switch (direction.getAxis()) {
-            case X:
-                toReplaceStream = BlockPos.betweenClosedStream(pos.offset(0, -1, -1), pos.offset(0, 1, 1));
-                break;
-            case Y:
-                toReplaceStream = BlockPos.betweenClosedStream(pos.offset(-1, 0, -1), pos.offset(1, 0, 1));
-                break;
-            case Z:
-                toReplaceStream = BlockPos.betweenClosedStream(pos.offset(-1, -1, 0), pos.offset(1, 1, 0));
-                break;
-            default:
-                toReplaceStream = BlockPos.betweenClosedStream(pos, pos);
-                break;
-        }
         return toReplaceStream.map(BlockPos::immutable)
                 .filter(blockPos -> world.getBlockState(blockPos).getBlock().equals(validBlock))
                 .collect(Collectors.toList());

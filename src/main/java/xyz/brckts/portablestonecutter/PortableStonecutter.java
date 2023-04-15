@@ -12,7 +12,6 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xyz.brckts.portablestonecutter.client.gui.PortableStonecutterScreen;
-import xyz.brckts.portablestonecutter.items.crafting.ModRecipeTypes;
 import xyz.brckts.portablestonecutter.network.NetworkHandler;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
@@ -26,9 +25,8 @@ public class PortableStonecutter
     public PortableStonecutter() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         modBus.addListener(this::clientSetup);
-        RegistryHandler.init();
+        RegistryHandler.init(modBus);
         NetworkHandler.init();
-        ModRecipeTypes.init();
 
         MinecraftForge.EVENT_BUS.register(this);
     }
