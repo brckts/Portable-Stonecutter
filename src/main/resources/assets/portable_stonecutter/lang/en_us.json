@@ -2,7 +2,7 @@
   "item.portable_stonecutter.portable_stonecutter": "Portable Stonecutter",
   "item.portable_stonecutter.ender_portable_stonecutter": "Ender Portable Stonecutter",
   "itemGroup.portableStonecutter": "Portable Stonecutter",
-  "jei.portable_stonecutter:jei_anvil_flattening": "Anvil Flattening",
+  "jei.portable_stonecutter:anvil_flattening": "Anvil Flattening",
   "info.portable_stonecutter:portable_stonecutter": "Throw the ingredients as items on the ground and drop an anvil on them to craft.",
   "info.portable_stonecutter.epsc.mode.normal": "Normal",
   "info.portable_stonecutter.epsc.mode.three_by_three": "3x3",

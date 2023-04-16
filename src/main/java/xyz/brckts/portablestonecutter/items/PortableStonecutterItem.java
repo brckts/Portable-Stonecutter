@@ -94,7 +94,7 @@ public class PortableStonecutterItem extends Item {
                 case THREE_BY_THREE ->
                         toReplace = toReplaceThreeByThree(world, Block.byItem(inputItem), pos, blockRayTraceResult.getDirection());
                 case LINE ->
-                        toReplace = toReplaceLine(world, Block.byItem(inputItem), pos, blockRayTraceResult.getDirection(), 3);
+                        toReplace = toReplaceLine(world, Block.byItem(inputItem), pos, blockRayTraceResult.getDirection(), 2);
                 default -> {
                     toReplace = new ArrayList<>();
                     if (world.getBlockState(pos).getBlock().equals(Block.byItem(inputItem))) toReplace.add(pos);

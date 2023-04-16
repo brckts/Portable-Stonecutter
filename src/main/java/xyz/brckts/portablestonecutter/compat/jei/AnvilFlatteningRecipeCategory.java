@@ -1,8 +1,11 @@
 package xyz.brckts.portablestonecutter.compat.jei;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
@@ -64,7 +67,6 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, AnvilFlatteningRecipe recipe, IFocusGroup focuses) {
 
-
         int width = 80;
         int index = 1;
         int ingrCnt = recipe.getIngredients().size();
@@ -76,15 +78,17 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
             builder.addSlot(RecipeIngredientRole.INPUT, offset + spaceBetweenEach * (index - 1), 45).addIngredients(i);
             index++;
         }
+
+        builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(recipe.getResultItem());
     }
 
 
-    /*@Override
+    @Override
     public void draw(AnvilFlatteningRecipe recipe, IRecipeSlotsView recipeSlotsView, PoseStack stack, double mouseX, double mouseY) {
         RenderSystem.enableBlend();
         overlay.draw(stack, 13, 20);
         RenderSystem.disableBlend();
-    }*/
+    }
 
     @SuppressWarnings("removal")
     @Override
