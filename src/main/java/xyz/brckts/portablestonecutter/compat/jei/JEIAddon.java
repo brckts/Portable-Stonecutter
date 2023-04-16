@@ -35,14 +35,11 @@ public class JEIAddon implements IModPlugin {
 
         List<AnvilFlatteningRecipe> anvilFlatteningRecipes = Minecraft.getInstance().level.getRecipeManager().getAllRecipesFor(AnvilFlatteningRecipe.Type.INSTANCE);
 
-        PortableStonecutter.LOGGER.warn("Registering recipes:");
-        for (AnvilFlatteningRecipe afr: anvilFlatteningRecipes) {
-            PortableStonecutter.LOGGER.warn("\t" + afr.getResultItem());
-        }
-
-        PortableStonecutter.LOGGER.warn("To type " + AnvilFlatteningRecipeCategory.RECIPE_TYPE);
         registration.addRecipes(AnvilFlatteningRecipeCategory.RECIPE_TYPE, anvilFlatteningRecipes);
-        registration.addIngredientInfo(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()), VanillaTypes.ITEM_STACK, new TranslatableComponent("info." + PortableStonecutter.MOD_ID + ":portable_stonecutter"));
+
+        for (var recipe: anvilFlatteningRecipes) {
+            registration.addIngredientInfo(recipe.getResultItem(), VanillaTypes.ITEM_STACK, new TranslatableComponent("info." + PortableStonecutter.MOD_ID + ":anvil_flattening"));
+        }
     }
 
     @Override
