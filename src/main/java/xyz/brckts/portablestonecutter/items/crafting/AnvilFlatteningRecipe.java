@@ -15,12 +15,14 @@ import xyz.brckts.portablestonecutter.PortableStonecutter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
 
     private final ResourceLocation id;
     private final ItemStack output;
     private final NonNullList<Ingredient> inputs;
+    //private final ResourceLocation allowedDim;
     private final ResourceLocation allowedDim;
 
     public AnvilFlatteningRecipe(ResourceLocation id, ResourceLocation allowedDim, ItemStack output, NonNullList<Ingredient> inputs) {
@@ -147,8 +149,14 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
             for (int i = 0; i < inputs.size(); i++) {
                 inputs.set(i, Ingredient.fromNetwork(buf));
             }
+
             ItemStack output = buf.readItem();
-            ResourceLocation allowedDim = buf.readResourceLocation();
+            ResourceLocation allowedDim = null;
+
+            if (buf.readBoolean()) {
+                allowedDim = buf.readResourceLocation();
+            }
+
             return new AnvilFlatteningRecipe(recipeId, allowedDim, output, inputs);
         }
 
@@ -158,8 +166,14 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
             for (Ingredient input : recipe.getIngredients()) {
                 input.toNetwork(buf);
             }
+
             buf.writeItemStack(recipe.getResultItem(), false);
-            buf.writeResourceLocation(recipe.getAllowedDim());
+            if (recipe.getAllowedDim() != null) {
+                buf.writeBoolean(true);
+                buf.writeResourceLocation(recipe.getAllowedDim());
+            } else {
+                buf.writeBoolean(false);
+            }
         }
 
         @Override

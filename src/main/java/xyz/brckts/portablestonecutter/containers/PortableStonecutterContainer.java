@@ -124,7 +124,8 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
         if (!this.recipes.isEmpty() && this.isRecipeIdValid(this.selectedRecipe.get())) {
             if (!this.recipes.get(this.selectedRecipe.get()).equals(this.lockedRecipe)) {
                 this.setRecipeLocked(false);
-                NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.getSelectedRecipe(), false));
+                if (this.world.isClientSide())
+                    NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.getSelectedRecipe(), false));
             }
             StonecutterRecipe stonecutterrecipe = this.recipes.get(this.selectedRecipe.get());
             this.inventory.setRecipeUsed(stonecutterrecipe);
@@ -326,7 +327,6 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
         return recipeId >= 0 && recipeId < this.recipes.size();
     }
 
-    @OnlyIn(Dist.CLIENT)
     public int getSelectedRecipe() {
         return this.selectedRecipe.get();
     }
