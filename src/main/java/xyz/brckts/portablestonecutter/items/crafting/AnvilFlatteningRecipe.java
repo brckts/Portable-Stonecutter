@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
+import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,12 +104,11 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
 
     @Override
     public RecipeType<?> getType() {
-        return Type.INSTANCE;
+        return RegistryHandler.ANVIL_FLATTENING_RECIPE_TYPE.get();
     }
 
     public static class Type implements RecipeType<AnvilFlatteningRecipe> {
-        private Type() {}
-        public static final Type INSTANCE = new Type();
+        public Type() {}
         public static final String ID = "anvil_flattening";
     }
 

@@ -15,6 +15,7 @@ import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
+import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +48,7 @@ public class AnvilFlatteningCraftingManager {
             inv.addItem(ie.getItem());
         }
 
-        Optional<AnvilFlatteningRecipe> recipeOptional = level.getRecipeManager().getRecipeFor(AnvilFlatteningRecipe.Type.INSTANCE, inv, level);
+        Optional<AnvilFlatteningRecipe> recipeOptional = level.getRecipeManager().getRecipeFor(RegistryHandler.ANVIL_FLATTENING_RECIPE_TYPE.get(), inv, level);
 
         if (!recipeOptional.isPresent()) return;
 

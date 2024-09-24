@@ -11,6 +11,7 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -83,7 +84,7 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
 
 
     @Override
-    public void draw(AnvilFlatteningRecipe recipe, IRecipeSlotsView recipeSlotsView, PoseStack poseStack, double mouseX, double mouseY) {
+    public void draw(AnvilFlatteningRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics guiGraphics, double mouseX, double mouseY) {
         /*RenderSystem.enableBlend();
         overlay.draw(stack, 13, 20);
         RenderSystem.disableBlend();*/
@@ -99,9 +100,9 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
         int x = this.background.getWidth() - width - 1;
         int y = this.background.getHeight() + height + 1;
 
-        minecraft.font.draw(poseStack, text, x + 1, y, shadowColor);
-        minecraft.font.draw(poseStack, text, x, y + 1, shadowColor);
-        minecraft.font.draw(poseStack, text, x + 1, y + 1, shadowColor);
-        minecraft.font.draw(poseStack, text, x, y, mainColor);
+        guiGraphics.drawString(minecraft.font, text, x + 1, y, shadowColor);
+        guiGraphics.drawString(minecraft.font, text, x, y + 1, shadowColor);
+        guiGraphics.drawString(minecraft.font, text, x + 1, y + 1, shadowColor);
+        guiGraphics.drawString(minecraft.font, text, x, y, mainColor);
     }
 }

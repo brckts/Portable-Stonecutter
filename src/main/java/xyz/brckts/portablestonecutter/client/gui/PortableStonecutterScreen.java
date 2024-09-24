@@ -3,8 +3,10 @@ package xyz.brckts.portablestonecutter.client.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -78,38 +80,38 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.renderHoveredTooltip(matrixStack, mouseX, mouseY);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.renderHoveredTooltip(guiGraphics, mouseX, mouseY);
     }
 
     @Override
-    protected void renderLabels(PoseStack matrixStack, int x, int y) {
+    protected void renderLabels(GuiGraphics guiGraphics, int x, int y) {
         this.titleLabelX = TITLE_X;
         this.titleLabelY = TITLE_Y;
-        super.renderLabels(matrixStack, x, y);
+        super.renderLabels(guiGraphics, x, y);
     }
 
     @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int mouseX, int mouseY) {
-        this.renderBackground(matrixStack);
+    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        this.renderBackground(guiGraphics);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, BACKGROUND_TEXTURE);
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
-        this.blit(matrixStack, x, y, 0, 0, this.imageWidth, this.imageHeight);
+        guiGraphics.blit(BACKGROUND_TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight);
         int sliderYOffset = (int)((float)SLIDER_MAX_Y_OFFSET * this.sliderProgress);
-        this.blit(matrixStack, this.leftPos + SLIDER_X, this.topPos + SLIDER_Y + sliderYOffset, SLIDER_TEXTURE_X + (this.canScroll() ? 0 : SLIDER_TEXTURE_WIDTH), 0, SLIDER_TEXTURE_WIDTH, SLIDER_TEXTURE_HEIGHT);
-        this.drawButtons(matrixStack, mouseX, mouseY);
+        guiGraphics.blit(BACKGROUND_TEXTURE, this.leftPos + SLIDER_X, this.topPos + SLIDER_Y + sliderYOffset, SLIDER_TEXTURE_X + (this.canScroll() ? 0 : SLIDER_TEXTURE_WIDTH), 0, SLIDER_TEXTURE_WIDTH, SLIDER_TEXTURE_HEIGHT);
+        this.drawButtons(guiGraphics, mouseX, mouseY);
         int recipeAreaStartX = this.leftPos + RECIPE_AREA_X_OFFSET;
         int recipeAreaStartY = this.topPos + RECIPE_AREA_Y_OFFSET;
         int lastShownRecipeIndex = this.recipeIndexOffset + RESULTS_MAX;
-        this.drawRecipeFrames(matrixStack, mouseX, mouseY, recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
-        this.drawRecipesItems(matrixStack, recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
-        if (this.menu.isRecipeLocked()) this.drawLockedItem(matrixStack);
+        this.drawRecipeFrames(guiGraphics, mouseX, mouseY, recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
+        this.drawRecipesItems(guiGraphics, recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
+        if (this.menu.isRecipeLocked()) this.drawLockedItem(guiGraphics);
     }
-    private void drawRecipeFrames(PoseStack matrixStack, int mouseX, int mouseY, int recipeAreaStartX, int recipeAreaStartY, int lastShownRecipeIndex) {
+    private void drawRecipeFrames(GuiGraphics guiGraphics, int mouseX, int mouseY, int recipeAreaStartX, int recipeAreaStartY, int lastShownRecipeIndex) {
         for(int i = this.recipeIndexOffset; i < lastShownRecipeIndex && i < this.menu.getRecipeListSize(); ++i) {
             int j = i - this.recipeIndexOffset;
             int columnStartX = recipeAreaStartX + j % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
@@ -122,20 +124,20 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
                 tileTextureStartY += RECIPE_TILE_HEIGHT * 2;
             }
 
-            this.blit(matrixStack, columnStartX, lineStartY - 1, 0, tileTextureStartY+1, RECIPE_TILE_WIDTH, RECIPE_TILE_HEIGHT);
+            guiGraphics.blit(BACKGROUND_TEXTURE, columnStartX, lineStartY - 1, 0, tileTextureStartY+1, RECIPE_TILE_WIDTH, RECIPE_TILE_HEIGHT);
         }
     }
 
-    private void drawButtons(PoseStack matrixStack, int mouseX, int mouseY) {
-        this.blit(matrixStack, this.leftPos + BUTTONS_START_X, this.topPos + BUTTONS_START_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + (this.clickedOnAll ? BUTTON_HEIGHT : 0), BUTTON_WIDTH, BUTTON_HEIGHT);
-        this.blit(matrixStack, this.leftPos + BUTTONS_START_X + BUTTON_WIDTH, this.topPos + BUTTONS_START_Y, BUTTON_TEXTURE_X_OFFSET + BUTTON_WIDTH, BUTTON_TEXTURE_Y_OFFSET + (this.clickedOn64 ? BUTTON_HEIGHT : 0), BUTTON_WIDTH, BUTTON_HEIGHT);
+    private void drawButtons(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        guiGraphics.blit(BACKGROUND_TEXTURE, this.leftPos + BUTTONS_START_X, this.topPos + BUTTONS_START_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + (this.clickedOnAll ? BUTTON_HEIGHT : 0), BUTTON_WIDTH, BUTTON_HEIGHT);
+        guiGraphics.blit(BACKGROUND_TEXTURE, this.leftPos + BUTTONS_START_X + BUTTON_WIDTH, this.topPos + BUTTONS_START_Y, BUTTON_TEXTURE_X_OFFSET + BUTTON_WIDTH, BUTTON_TEXTURE_Y_OFFSET + (this.clickedOn64 ? BUTTON_HEIGHT : 0), BUTTON_WIDTH, BUTTON_HEIGHT);
         if (this.menu.isLockable() || this.menu.isRecipeLocked()) {
-            this.blit(matrixStack, this.leftPos + LOCK_BUTTON_X, this.topPos + LOCK_BUTTON_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + BUTTON_HEIGHT * 2 + (this.menu.isRecipeLocked() ? LOCK_BUTTON_HEIGHT : 0), LOCK_BUTTON_WIDTH, LOCK_BUTTON_HEIGHT);
+            guiGraphics.blit(BACKGROUND_TEXTURE, this.leftPos + LOCK_BUTTON_X, this.topPos + LOCK_BUTTON_Y, BUTTON_TEXTURE_X_OFFSET, BUTTON_TEXTURE_Y_OFFSET + BUTTON_HEIGHT * 2 + (this.menu.isRecipeLocked() ? LOCK_BUTTON_HEIGHT : 0), LOCK_BUTTON_WIDTH, LOCK_BUTTON_HEIGHT);
         }
     }
 
-    protected void renderHoveredTooltip(PoseStack matrixStack, int mouseX, int mouseY) {
-        super.renderTooltip(matrixStack, mouseX, mouseY);
+    protected void renderHoveredTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        super.renderTooltip(guiGraphics, mouseX, mouseY);
         if (this.hasItemsInInputSlot) {
             int i = this.leftPos + RECIPE_AREA_X_OFFSET;
             int j = this.topPos + RECIPE_AREA_Y_OFFSET;
@@ -147,13 +149,13 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
                 int j1 = i + i1 % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
                 int k1 = j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT + 2;
                 if (mouseX >= j1 && mouseX < j1 + RECIPE_TILE_WIDTH && mouseY >= k1 && mouseY < k1 + RECIPE_TILE_HEIGHT) {
-                    this.renderTooltip(matrixStack, list.get(l).getResultItem(this.minecraft.level.registryAccess()), mouseX, mouseY);
+                    guiGraphics.renderTooltip(this.font, list.get(l).getResultItem(this.minecraft.level.registryAccess()), mouseX, mouseY);
                 }
             }
         }
     }
 
-    private void drawRecipesItems(PoseStack matrixStack, int left, int top, int recipeIndexOffsetMax) {
+    private void drawRecipesItems(GuiGraphics guiGraphics, int left, int top, int recipeIndexOffsetMax) {
         List<StonecutterRecipe> list = this.menu.getRecipeList();
 
         for(int i = this.recipeIndexOffset; i < recipeIndexOffsetMax && i < this.menu.getRecipeListSize(); ++i) {
@@ -161,14 +163,14 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
             int k = left + j % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
             int l = j / RESULTS_PER_LINE;
             int i1 = top + l * RECIPE_TILE_HEIGHT + 2;
-            this.minecraft.getItemRenderer().renderAndDecorateItem(matrixStack, list.get(i).getResultItem(this.minecraft.level.registryAccess()), k, i1);
+            guiGraphics.renderItem(list.get(i).getResultItem(this.minecraft.level.registryAccess()), k, i1);
         }
     }
 
-    private void drawLockedItem(PoseStack ms) {
+    private void drawLockedItem(GuiGraphics guiGraphics) {
         if (this.menu.getLockedRecipe() != null && this.menu.getLockedInput() != null) {
-            RenderHelper.renderGhostItem(ms, this.minecraft, new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y);
-            RenderHelper.renderGhostItem(ms, this.minecraft, this.menu.getLockedRecipe().getResultItem(this.minecraft.level.registryAccess()), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y);
+            RenderHelper.renderGhostItem(guiGraphics, this.minecraft, new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y);
+            RenderHelper.renderGhostItem(guiGraphics, this.minecraft, this.menu.getLockedRecipe().getResultItem(this.minecraft.level.registryAccess()), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y);
         }
     }
 

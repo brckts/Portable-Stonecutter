@@ -38,13 +38,4 @@ public class PortableStonecutter
     private void clientSetup(final FMLClientSetupEvent event) {
         MenuScreens.register(RegistryHandler.PORTABLE_STONECUTTER_CONTAINER.get(), PortableStonecutterScreen::new);
     }
-
-    public static final CreativeModeTab TAB = CreativeModeTab.builder(CreativeModeTab.Row.TOP, 10)
-            .title(Component.translatable("itemGroup.portableStonecutter"))
-            .icon(() -> new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()))
-            .displayItems((parameters, output) -> {
-                output.accept(RegistryHandler.PORTABLE_STONECUTTER.get());
-                output.accept(RegistryHandler.ENDER_PORTABLE_STONECUTTER.get());
-            })
-            .build();
 }

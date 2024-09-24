@@ -112,7 +112,7 @@ public class PortableStonecutterItem extends Item {
             world.levelEvent(2001, blockPos, Block.getId(inputState));
 
             if (outputCnt > 1) {
-                player.drop(new ItemStack(recipe.getResultItem(player.level.registryAccess()).getItem(), outputCnt - 1), true, true);
+                player.drop(new ItemStack(recipe.getResultItem(player.level().registryAccess()).getItem(), outputCnt - 1), true, true);
             }
         }
     }
