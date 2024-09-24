@@ -1,8 +1,8 @@
 package xyz.brckts.portablestonecutter.util.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -14,8 +14,7 @@ public class RenderHelper {
 
     public static void renderGhostItem(GuiGraphics guiGraphics, Minecraft mc, ItemStack is, int x, int y) {
         guiGraphics.renderItem(is, x, y);
-        RenderSystem.depthFunc(516);
-        guiGraphics.fill(x, y, x + 16, y + 16, 822083583);
-        RenderSystem.depthFunc(515);
+        int color = 0x308b8b8b;
+        guiGraphics.fillGradient(RenderType.guiOverlay(), x, y, x + 16, y + 16, color, color, 0);
     }
 }
