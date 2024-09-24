@@ -16,7 +16,7 @@ public class RenderHelper {
 
     public static void renderGhostItem(PoseStack ms, Minecraft mc, ItemStack is, int x, int y) {
         ItemRenderer itemrenderer = mc.getItemRenderer();
-        itemrenderer.renderAndDecorateFakeItem(is, x, y);
+        itemrenderer.renderAndDecorateFakeItem(ms, is, x, y);
         RenderSystem.depthFunc(516);
         GuiComponent.fill(ms, x, y, x + 16, y + 16, 822083583);
         RenderSystem.depthFunc(515);

@@ -106,7 +106,7 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
         int recipeAreaStartY = this.topPos + RECIPE_AREA_Y_OFFSET;
         int lastShownRecipeIndex = this.recipeIndexOffset + RESULTS_MAX;
         this.drawRecipeFrames(matrixStack, mouseX, mouseY, recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
-        this.drawRecipesItems(recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
+        this.drawRecipesItems(matrixStack, recipeAreaStartX, recipeAreaStartY, lastShownRecipeIndex);
         if (this.menu.isRecipeLocked()) this.drawLockedItem(matrixStack);
     }
     private void drawRecipeFrames(PoseStack matrixStack, int mouseX, int mouseY, int recipeAreaStartX, int recipeAreaStartY, int lastShownRecipeIndex) {
@@ -147,13 +147,13 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
                 int j1 = i + i1 % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
                 int k1 = j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT + 2;
                 if (mouseX >= j1 && mouseX < j1 + RECIPE_TILE_WIDTH && mouseY >= k1 && mouseY < k1 + RECIPE_TILE_HEIGHT) {
-                    this.renderTooltip(matrixStack, list.get(l).getResultItem(), mouseX, mouseY);
+                    this.renderTooltip(matrixStack, list.get(l).getResultItem(this.minecraft.level.registryAccess()), mouseX, mouseY);
                 }
             }
         }
     }
 
-    private void drawRecipesItems(int left, int top, int recipeIndexOffsetMax) {
+    private void drawRecipesItems(PoseStack matrixStack, int left, int top, int recipeIndexOffsetMax) {
         List<StonecutterRecipe> list = this.menu.getRecipeList();
 
         for(int i = this.recipeIndexOffset; i < recipeIndexOffsetMax && i < this.menu.getRecipeListSize(); ++i) {
@@ -161,14 +161,14 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
             int k = left + j % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
             int l = j / RESULTS_PER_LINE;
             int i1 = top + l * RECIPE_TILE_HEIGHT + 2;
-            this.minecraft.getItemRenderer().renderAndDecorateItem(list.get(i).getResultItem(), k, i1);
+            this.minecraft.getItemRenderer().renderAndDecorateItem(matrixStack, list.get(i).getResultItem(this.minecraft.level.registryAccess()), k, i1);
         }
     }
 
     private void drawLockedItem(PoseStack ms) {
         if (this.menu.getLockedRecipe() != null && this.menu.getLockedInput() != null) {
             RenderHelper.renderGhostItem(ms, this.minecraft, new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y);
-            RenderHelper.renderGhostItem(ms, this.minecraft, this.menu.getLockedRecipe().getResultItem(), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y);
+            RenderHelper.renderGhostItem(ms, this.minecraft, this.menu.getLockedRecipe().getResultItem(this.minecraft.level.registryAccess()), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y);
         }
     }
 

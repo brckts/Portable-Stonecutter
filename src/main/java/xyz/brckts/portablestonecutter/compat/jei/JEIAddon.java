@@ -37,7 +37,7 @@ public class JEIAddon implements IModPlugin {
         registration.addRecipes(AnvilFlatteningRecipeCategory.RECIPE_TYPE, anvilFlatteningRecipes);
 
         for (var recipe: anvilFlatteningRecipes) {
-            registration.addIngredientInfo(recipe.getResultItem(), VanillaTypes.ITEM_STACK, Component.translatable("info." + PortableStonecutter.MOD_ID + ":anvil_flattening"));
+            registration.addIngredientInfo(recipe.getResultItem(Minecraft.getInstance().level.registryAccess()), VanillaTypes.ITEM_STACK, Component.translatable("info." + PortableStonecutter.MOD_ID + ":anvil_flattening"));
         }
     }
 

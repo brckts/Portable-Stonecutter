@@ -41,7 +41,7 @@ import static xyz.brckts.portablestonecutter.util.NBTHelper.getRecipeFromNBT;
 public class PortableStonecutterItem extends Item {
     private static final Component CONTAINER_NAME = Component.translatable("container.portable_stonecutter");
     public PortableStonecutterItem() {
-        super(new Item.Properties().tab(PortableStonecutter.TAB).stacksTo(1));
+        super(new Item.Properties().stacksTo(1));
     }
 
     @Override
@@ -79,8 +79,8 @@ public class PortableStonecutterItem extends Item {
 
         if (recipe == null) return;
 
-        Block outputBlock = Block.byItem(recipe.getResultItem().getItem());
-        int outputCnt = recipe.getResultItem().getCount();
+        Block outputBlock = Block.byItem(recipe.getResultItem(world.registryAccess()).getItem());
+        int outputCnt = recipe.getResultItem(world.registryAccess()).getCount();
 
         if(outputBlock == Blocks.AIR) return;
 
@@ -112,7 +112,7 @@ public class PortableStonecutterItem extends Item {
             world.levelEvent(2001, blockPos, Block.getId(inputState));
 
             if (outputCnt > 1) {
-                player.drop(new ItemStack(recipe.getResultItem().getItem(), outputCnt - 1), true, true);
+                player.drop(new ItemStack(recipe.getResultItem(player.level.registryAccess()).getItem(), outputCnt - 1), true, true);
             }
         }
     }

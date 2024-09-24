@@ -131,7 +131,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             }
             StonecutterRecipe stonecutterrecipe = this.recipes.get(this.selectedRecipe.get());
             this.inventory.setRecipeUsed(stonecutterrecipe);
-            this.outputInventorySlot.set(stonecutterrecipe.assemble(this.container));
+            this.outputInventorySlot.set(stonecutterrecipe.assemble(this.container, this.world.registryAccess()));
         } else {
             this.outputInventorySlot.set(ItemStack.EMPTY);
         }
@@ -215,18 +215,17 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
 
         if(!isRecipeIdValid(this.selectedRecipe.get())) {
             if (this.recipeLocked) {
-                output = this.lockedRecipe.getResultItem();
+                output = this.lockedRecipe.getResultItem(this.world.registryAccess());
                 input = this.lockedInput;            }
             else return;
         } else {
-            output = this.recipes.get(this.selectedRecipe.get()).getResultItem();
+            output = this.recipes.get(this.selectedRecipe.get()).getResultItem(this.world.registryAccess());
             input = this.itemStackInput.getItem();
         }
 
         int inputCnt = inputInventorySlot.getItem().getCount();
         for(ItemStack itemStack : player.getInventory().items) {
-            if (itemStack.sameItemStackIgnoreDurability(new ItemStack(input)) &&
-                    (NbtUtils.compareNbt(itemStackInput.getTag(), itemStack.getTag(), false))) {
+            if (ItemStack.isSameItemSameTags(itemStack, new ItemStack(input))) {
                 inputCnt += itemStack.getCount();
                 itemStack.setCount(0);
             }
@@ -245,18 +244,19 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
 
         if(!isRecipeIdValid(this.selectedRecipe.get())) {
             if (this.recipeLocked) {
-                output = this.lockedRecipe.getResultItem();
-                input = this.lockedInput;            }
+                output = this.lockedRecipe.getResultItem(this.world.registryAccess());
+                input = this.lockedInput;
+            }
             else return;
         } else {
-            output = this.recipes.get(this.selectedRecipe.get()).getResultItem();
+            output = this.recipes.get(this.selectedRecipe.get()).getResultItem(this.world.registryAccess());
             input = this.itemStackInput.getItem();
         }
 
         int toConvert = 64;
         for (int i = 0; i < player.getInventory().getContainerSize() && toConvert > 0 ; ++i) {
             ItemStack stack = player.getInventory().getItem(i);
-            if(stack.sameItemStackIgnoreDurability(new ItemStack(input))) {
+            if(ItemStack.isSameItemSameTags(stack, new ItemStack(input))) {
                 if (toConvert >= stack.getCount()) {
                     toConvert -= stack.getCount();
                     player.getInventory().setItem(i, ItemStack.EMPTY);
@@ -392,7 +392,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
     }
 
     public boolean isLockable() {
-        return this.isRecipeIdValid(this.selectedRecipe.get()) && Block.byItem(this.recipes.get(this.selectedRecipe.get()).getResultItem().getItem()) != Blocks.AIR;
+        return this.isRecipeIdValid(this.selectedRecipe.get()) && Block.byItem(this.recipes.get(this.selectedRecipe.get()).getResultItem(this.world.registryAccess()).getItem()) != Blocks.AIR;
     }
 
     public boolean isRecipeLocked() {

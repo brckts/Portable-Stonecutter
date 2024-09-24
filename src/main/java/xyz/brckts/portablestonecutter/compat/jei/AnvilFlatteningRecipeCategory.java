@@ -78,7 +78,7 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
             index++;
         }
 
-        builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(recipe.getResultItem());
+        builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(recipe.getResultItem(Minecraft.getInstance().level.registryAccess()));
     }
 
 

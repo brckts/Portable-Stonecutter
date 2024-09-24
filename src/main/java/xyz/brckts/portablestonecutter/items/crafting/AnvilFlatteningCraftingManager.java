@@ -70,6 +70,6 @@ public class AnvilFlatteningCraftingManager {
             }
         }
 
-        level.addFreshEntity(new ItemEntity(level, pos.getX(), pos.getY(), pos.getZ(), recipe.getResultItem()));
+        level.addFreshEntity(new ItemEntity(level, pos.getX(), pos.getY(), pos.getZ(), recipe.getResultItem(level.registryAccess())));
     }
 }

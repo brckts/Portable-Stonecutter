@@ -1,5 +1,6 @@
 package xyz.brckts.portablestonecutter.util;
 
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -30,7 +31,7 @@ public class RegistryHandler {
     public static final RegistryObject<Item> PORTABLE_STONECUTTER = ITEMS.register("portable_stonecutter", PortableStonecutterItem::new);
     public static final RegistryObject<Item> ENDER_PORTABLE_STONECUTTER = ITEMS.register("ender_portable_stonecutter", EnderPortableStonecutterItem::new);
     public static final RegistryObject<MenuType<PortableStonecutterContainer>> PORTABLE_STONECUTTER_CONTAINER =
-            MENU_TYPES.register("portable_stonecutter_container", () -> new MenuType<>(PortableStonecutterContainer::new));
+            MENU_TYPES.register("portable_stonecutter_container", () -> new MenuType<>(PortableStonecutterContainer::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static final RegistryObject<RecipeSerializer<AnvilFlatteningRecipe>> ANVIL_FLATTENING_SERIALIZER =
             SERIALIZERS.register("anvil_flattening", () -> AnvilFlatteningRecipe.Serializer.INSTANCE);

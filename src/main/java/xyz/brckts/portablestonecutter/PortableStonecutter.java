@@ -1,6 +1,7 @@
 package xyz.brckts.portablestonecutter;
 
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
@@ -38,10 +39,12 @@ public class PortableStonecutter
         MenuScreens.register(RegistryHandler.PORTABLE_STONECUTTER_CONTAINER.get(), PortableStonecutterScreen::new);
     }
 
-    public static final CreativeModeTab TAB = new CreativeModeTab("portableStonecutter") {
-        @Override
-        public ItemStack makeIcon() {
-            return new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get());
-        }
-    };
+    public static final CreativeModeTab TAB = CreativeModeTab.builder(CreativeModeTab.Row.TOP, 10)
+            .title(Component.translatable("itemGroup.portableStonecutter"))
+            .icon(() -> new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()))
+            .displayItems((parameters, output) -> {
+                output.accept(RegistryHandler.PORTABLE_STONECUTTER.get());
+                output.accept(RegistryHandler.ENDER_PORTABLE_STONECUTTER.get());
+            })
+            .build();
 }

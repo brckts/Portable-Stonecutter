@@ -3,6 +3,7 @@ package xyz.brckts.portablestonecutter.items.crafting;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
@@ -18,7 +19,7 @@ import java.util.List;
 public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
 
     private final ResourceLocation id;
-    private final ItemStack output;
+    final ItemStack output;
     private final NonNullList<Ingredient> inputs;
     //private final ResourceLocation allowedDim;
     private final ResourceLocation allowedDim;
@@ -67,7 +68,7 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
 
 
     @Override
-    public ItemStack assemble(SimpleContainer pContainer) {
+    public ItemStack assemble(SimpleContainer pContainer, RegistryAccess registryAccess) {
         return this.output;
     }
 
@@ -77,7 +78,7 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
     }
 
     @Override
-    public ItemStack getResultItem() {
+    public ItemStack getResultItem(RegistryAccess registryAccess) {
         return this.output.copy();
     }
 
@@ -165,7 +166,7 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
                 input.toNetwork(buf);
             }
 
-            buf.writeItemStack(recipe.getResultItem(), false);
+            buf.writeItemStack(recipe.output, false);
             if (recipe.getAllowedDim() != null) {
                 buf.writeBoolean(true);
                 buf.writeResourceLocation(recipe.getAllowedDim());
