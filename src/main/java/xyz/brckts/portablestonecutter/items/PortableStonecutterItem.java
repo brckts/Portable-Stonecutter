@@ -5,7 +5,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
@@ -40,7 +39,7 @@ import static xyz.brckts.portablestonecutter.util.NBTHelper.getRecipeFromNBT;
 
 @Mod.EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class PortableStonecutterItem extends Item {
-    private static final Component CONTAINER_NAME = new TranslatableComponent("container.portable_stonecutter");
+    private static final Component CONTAINER_NAME = Component.translatable("container.portable_stonecutter");
     public PortableStonecutterItem() {
         super(new Item.Properties().tab(PortableStonecutter.TAB).stacksTo(1));
     }
@@ -60,13 +59,13 @@ public class PortableStonecutterItem extends Item {
     @SubscribeEvent
     public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
 
-        Level world = event.getWorld();
+        Level world = event.getLevel();
         BlockPos pos = event.getPos();
         if(world.isClientSide()) {
             return;
         }
 
-        ServerPlayer player = (ServerPlayer) event.getPlayer();
+        ServerPlayer player = (ServerPlayer) event.getEntity();
 
         ItemStack is = event.getItemStack();
 

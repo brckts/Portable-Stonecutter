@@ -12,7 +12,6 @@ import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -38,7 +37,7 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
     public AnvilFlatteningRecipeCategory(IGuiHelper guiHelper) {
         this.background = guiHelper.createBlankDrawable(90, 70);
         this.icon = guiHelper.createDrawableItemStack(new ItemStack(Items.ANVIL));
-        this.title = new TranslatableComponent("jei." + RECIPE_TYPE.getUid());
+        this.title = Component.translatable("jei." + RECIPE_TYPE.getUid());
         //this.overlay = guiHelper.createDrawable(texture, 0, 0, 64, 64);
     }
 
@@ -104,18 +103,5 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
         minecraft.font.draw(poseStack, text, x, y + 1, shadowColor);
         minecraft.font.draw(poseStack, text, x + 1, y + 1, shadowColor);
         minecraft.font.draw(poseStack, text, x, y, mainColor);
-    }
-
-    @SuppressWarnings("removal")
-    @Override
-    public ResourceLocation getUid() {
-        return getRecipeType().getUid();
-    }
-
-
-    @SuppressWarnings("removal")
-    @Override
-    public Class<? extends AnvilFlatteningRecipe> getRecipeClass() {
-        return getRecipeType().getRecipeClass();
     }
 }

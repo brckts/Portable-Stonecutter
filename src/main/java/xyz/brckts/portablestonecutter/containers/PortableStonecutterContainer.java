@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.registries.ForgeRegistries;
 import xyz.brckts.portablestonecutter.items.PortableStonecutterItem;
 import xyz.brckts.portablestonecutter.network.MessageLockRecipe;
 import xyz.brckts.portablestonecutter.network.NetworkHandler;
@@ -28,6 +29,7 @@ import xyz.brckts.portablestonecutter.util.NBTHelper;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.List;
+import java.util.Objects;
 
 import static xyz.brckts.portablestonecutter.util.InventoryUtils.addOrDrop;
 
@@ -298,7 +300,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             pScStack.setTag(nbtTagCompound);
         }
 
-        nbtTagCompound.putString("item", inputItem.getRegistryName().toString());
+        nbtTagCompound.putString("item", Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(inputItem)).toString());
         nbtTagCompound.putInt("recipeId", recipeId);
     }
 

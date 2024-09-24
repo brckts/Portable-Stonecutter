@@ -3,7 +3,6 @@ package xyz.brckts.portablestonecutter.items;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.MenuProvider;
@@ -20,7 +19,7 @@ public class EnderPortableStonecutterItem extends PortableStonecutterItem {
         THREE_BY_THREE,
         LINE
     }
-    private static final Component CONTAINER_NAME = new TranslatableComponent("container.ender_portable_stonecutter");
+    private static final Component CONTAINER_NAME = Component.translatable("container.ender_portable_stonecutter");
 
     public EnderPortableStonecutterItem() {
         super();
@@ -32,7 +31,7 @@ public class EnderPortableStonecutterItem extends PortableStonecutterItem {
 
         if (playerIn.isCrouching()) {
             nextEPSCMode(stack);
-            playerIn.displayClientMessage(new TranslatableComponent("info.portable_stonecutter.epsc.mode." + getMode(stack).name().toLowerCase(), ChatFormatting.RED).withStyle(ChatFormatting.DARK_GREEN), true);
+            playerIn.displayClientMessage(Component.translatable("info.portable_stonecutter.epsc.mode." + getMode(stack).name().toLowerCase(), ChatFormatting.RED).withStyle(ChatFormatting.DARK_GREEN), true);
             return InteractionResultHolder.success(stack);
         }
 

@@ -11,7 +11,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
+import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
@@ -24,14 +24,14 @@ import java.util.Optional;
 public class AnvilFlatteningCraftingManager {
 
     @SubscribeEvent
-    public static void onEntityLeaveWorld(EntityLeaveWorldEvent event) {
+    public static void onEntityLeaveWorld(EntityLeaveLevelEvent event) {
 
-        if (event.getWorld().isClientSide()) return;
+        if (event.getLevel().isClientSide()) return;
 
         Entity entity = event.getEntity();
         if(entity instanceof FallingBlockEntity fbEntity) {
             if(fbEntity.getBlockState().getBlock() instanceof AnvilBlock) {
-                craft(event.getWorld(), entity.blockPosition());
+                craft(event.getLevel(), entity.blockPosition());
             }
         }
     }

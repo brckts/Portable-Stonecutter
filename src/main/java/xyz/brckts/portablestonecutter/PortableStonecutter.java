@@ -22,8 +22,8 @@ public class PortableStonecutter
     public static final Logger LOGGER = LogManager.getLogger();
     public static final String MOD_ID = "portable_stonecutter";
 
-    public PortableStonecutter() {
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+    public PortableStonecutter(FMLJavaModLoadingContext context) {
+        IEventBus modBus = context.getModEventBus();
         modBus.addListener(this::clientSetup);
         RegistryHandler.init(modBus);
         NetworkHandler.init();

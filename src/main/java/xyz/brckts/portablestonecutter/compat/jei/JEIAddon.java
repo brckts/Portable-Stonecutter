@@ -8,13 +8,12 @@ import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.items.crafting.AnvilFlatteningRecipe;
-import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.List;
 
@@ -38,7 +37,7 @@ public class JEIAddon implements IModPlugin {
         registration.addRecipes(AnvilFlatteningRecipeCategory.RECIPE_TYPE, anvilFlatteningRecipes);
 
         for (var recipe: anvilFlatteningRecipes) {
-            registration.addIngredientInfo(recipe.getResultItem(), VanillaTypes.ITEM_STACK, new TranslatableComponent("info." + PortableStonecutter.MOD_ID + ":anvil_flattening"));
+            registration.addIngredientInfo(recipe.getResultItem(), VanillaTypes.ITEM_STACK, Component.translatable("info." + PortableStonecutter.MOD_ID + ":anvil_flattening"));
         }
     }
 
