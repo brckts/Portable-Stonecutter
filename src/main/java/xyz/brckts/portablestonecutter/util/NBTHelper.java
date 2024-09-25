@@ -1,5 +1,6 @@
 package xyz.brckts.portablestonecutter.util;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
@@ -7,10 +8,11 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.List;
 
@@ -20,7 +22,7 @@ public class NBTHelper {
         stack.setTag(null);
     }
 
-    public static StonecutterRecipe getRecipeFromNBT(Level world, CompoundTag nbt) {
+    public static RecipeHolder<StonecutterRecipe> getRecipeFromNBT(Level world, CompoundTag nbt) {
         if(nbt == null || !nbt.contains("item") || !nbt.contains("recipeId")) {
             return null;
         }
@@ -32,7 +34,7 @@ public class NBTHelper {
         Container inputInventory = new SimpleContainer(1);
         inputInventory.setItem(0, new ItemStack(inputItem));
 
-        List<StonecutterRecipe> recipes = world.getRecipeManager().getRecipesFor(RecipeType.STONECUTTING, inputInventory, world);
+        List<RecipeHolder<StonecutterRecipe>> recipes = world.getRecipeManager().getRecipesFor(RecipeType.STONECUTTING, inputInventory, world);
 
         if(recipeId >= recipes.size()) {
             nbt.remove("recipeId");
@@ -49,11 +51,11 @@ public class NBTHelper {
 
         ResourceLocation inputItemRL = new ResourceLocation(nbt.getString("item"));
 
-        if(!ForgeRegistries.ITEMS.containsKey(inputItemRL)) {
+        if(!BuiltInRegistries.ITEM.containsKey(inputItemRL)) {
             nbt.remove("item");
             return null;
         }
 
-        return ForgeRegistries.ITEMS.getValue(inputItemRL);
+        return BuiltInRegistries.ITEM.get(inputItemRL);
     }
 }

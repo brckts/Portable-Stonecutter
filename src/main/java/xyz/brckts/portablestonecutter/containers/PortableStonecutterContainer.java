@@ -1,8 +1,8 @@
 package xyz.brckts.portablestonecutter.containers;
 
 import com.google.common.collect.Lists;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -12,21 +12,19 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.inventory.StonecutterMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.registries.ForgeRegistries;
-import xyz.brckts.portablestonecutter.PortableStonecutter;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.network.PacketDistributor;
 import xyz.brckts.portablestonecutter.items.PortableStonecutterItem;
 import xyz.brckts.portablestonecutter.network.MessageLockRecipe;
-import xyz.brckts.portablestonecutter.network.NetworkHandler;
 import xyz.brckts.portablestonecutter.util.NBTHelper;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
@@ -43,17 +41,17 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
     private static final int INV_SLOT_END = 29;
     private static final int USE_ROW_SLOT_START = 29;
     private static final int USE_ROW_SLOT_END = 38;
-    private List<StonecutterRecipe> recipes = Lists.newArrayList();
-    private final DataSlot selectedRecipe = DataSlot.standalone();
+    private List<RecipeHolder<StonecutterRecipe>> recipes = Lists.newArrayList();
+    private final DataSlot selectedRecipeIndex = DataSlot.standalone();
     private final Level world;
-    private ItemStack itemStackInput = ItemStack.EMPTY;
+    private ItemStack input = ItemStack.EMPTY;
     /** The inventory that stores the output of the crafting recipe. */
     private final ResultContainer inventory = new ResultContainer();
-    final Slot inputInventorySlot;
+    final Slot inputSlot;
     /** The inventory slot that stores the output of the crafting recipe. */
     final Slot outputInventorySlot;
     private boolean recipeLocked;
-    private StonecutterRecipe lockedRecipe;
+    private RecipeHolder<StonecutterRecipe> lockedRecipe;
     private Item lockedInput;
 
     private Runnable slotUpdateListener = () -> {
@@ -92,7 +90,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
         }
 
         this.world = playerInventoryIn.player.level();
-        this.inputInventorySlot = this.addSlot(new Slot(this.container, 0, startX + 4, inY + 4));
+        this.inputSlot = this.addSlot(new Slot(this.container, 0, startX + 4, inY + 4));
         this.outputInventorySlot = this.addSlot(new Slot(this.resultContainer, 1, startX + 4, outY + 4) {
             public boolean mayPlace(ItemStack stack) {
                 return false;
@@ -101,7 +99,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             public void onTake(Player thePlayer, ItemStack stack) {
                 stack.onCraftedBy(thePlayer.level(), thePlayer, stack.getCount());
                 PortableStonecutterContainer.this.inventory.awardUsedRecipes(thePlayer, getRelevantItems());
-                ItemStack itemstack = PortableStonecutterContainer.this.inputInventorySlot.remove(1);
+                ItemStack itemstack = PortableStonecutterContainer.this.inputSlot.remove(1);
                 if (!itemstack.isEmpty()) {
                     PortableStonecutterContainer.this.updateRecipeResultSlot();
                 }
@@ -109,7 +107,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             }
 
             private List<ItemStack> getRelevantItems() {
-                return List.of(PortableStonecutterContainer.this.inputInventorySlot.getItem());
+                return List.of(PortableStonecutterContainer.this.inputSlot.getItem());
             }
         });
 
@@ -124,19 +122,19 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             this.addSlot(new Slot(playerInventoryIn, column, startX + column * (slotSize + 2), hotbarY));
         }
 
-        this.addDataSlot(this.selectedRecipe);
+        this.addDataSlot(this.selectedRecipeIndex);
     }
 
     private void updateRecipeResultSlot() {
-        if (!this.recipes.isEmpty() && this.isRecipeIdValid(this.selectedRecipe.get())) {
-            if (!this.recipes.get(this.selectedRecipe.get()).equals(this.lockedRecipe)) {
+        if (!this.recipes.isEmpty() && this.isRecipeIdValid(this.selectedRecipeIndex.get())) {
+            if (!this.recipes.get(this.selectedRecipeIndex.get()).equals(this.lockedRecipe)) {
                 this.setRecipeLocked(false);
                 if (this.world.isClientSide())
-                    NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.getSelectedRecipe(), false));
+                    PacketDistributor.SERVER.noArg().send(new MessageLockRecipe(this.getSelectedRecipeIndex(), false));
             }
-            StonecutterRecipe stonecutterrecipe = this.recipes.get(this.selectedRecipe.get());
+            RecipeHolder<StonecutterRecipe> stonecutterrecipe = this.recipes.get(this.selectedRecipeIndex.get());
             this.inventory.setRecipeUsed(stonecutterrecipe);
-            this.outputInventorySlot.set(stonecutterrecipe.assemble(this.container, this.world.registryAccess()));
+            this.outputInventorySlot.set(stonecutterrecipe.value().assemble(this.container, this.world.registryAccess()));
         } else {
             this.outputInventorySlot.set(ItemStack.EMPTY);
         }
@@ -206,7 +204,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
 
     public boolean selectRecipe(int recipeId) {
         if (this.isRecipeIdValid(recipeId)) {
-            this.selectedRecipe.set(recipeId);
+            this.selectedRecipeIndex.set(recipeId);
             this.updateRecipeResultSlot();
             return true;
         }
@@ -218,17 +216,17 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
         ItemStack output;
         Item input;
 
-        if(!isRecipeIdValid(this.selectedRecipe.get())) {
+        if(!isRecipeIdValid(this.selectedRecipeIndex.get())) {
             if (this.recipeLocked) {
-                output = this.lockedRecipe.getResultItem(this.world.registryAccess());
+                output = this.lockedRecipe.value().getResultItem(this.world.registryAccess());
                 input = this.lockedInput;            }
             else return;
         } else {
-            output = this.recipes.get(this.selectedRecipe.get()).getResultItem(this.world.registryAccess());
-            input = this.itemStackInput.getItem();
+            output = this.recipes.get(this.selectedRecipeIndex.get()).value().getResultItem(this.world.registryAccess());
+            input = this.input.getItem();
         }
 
-        int inputCnt = inputInventorySlot.getItem().getCount();
+        int inputCnt = inputSlot.getItem().getCount();
         for(ItemStack itemStack : player.getInventory().items) {
             if (ItemStack.isSameItemSameTags(itemStack, new ItemStack(input))) {
                 inputCnt += itemStack.getCount();
@@ -236,7 +234,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             }
         }
 
-        inputInventorySlot.set(ItemStack.EMPTY);
+        inputSlot.set(ItemStack.EMPTY);
         addOrDrop(player, output, inputCnt);
         this.updateRecipeResultSlot();
         player.getInventory().setChanged();
@@ -247,15 +245,15 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
         ItemStack output;
         Item input;
 
-        if(!isRecipeIdValid(this.selectedRecipe.get())) {
+        if(!isRecipeIdValid(this.selectedRecipeIndex.get())) {
             if (this.recipeLocked) {
-                output = this.lockedRecipe.getResultItem(this.world.registryAccess());
+                output = this.lockedRecipe.value().getResultItem(this.world.registryAccess());
                 input = this.lockedInput;
             }
             else return;
         } else {
-            output = this.recipes.get(this.selectedRecipe.get()).getResultItem(this.world.registryAccess());
-            input = this.itemStackInput.getItem();
+            output = this.recipes.get(this.selectedRecipeIndex.get()).value().getResultItem(this.world.registryAccess());
+            input = this.input.getItem();
         }
 
         int toConvert = 64;
@@ -272,12 +270,12 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             }
         }
         if(toConvert > 0) {
-            if(inputInventorySlot.getItem().getCount() > toConvert) {
-                inputInventorySlot.remove(toConvert);
+            if(inputSlot.getItem().getCount() > toConvert) {
+                inputSlot.remove(toConvert);
                 toConvert = 0;
             } else {
-                toConvert -= inputInventorySlot.getItem().getCount();
-                inputInventorySlot.set(ItemStack.EMPTY);
+                toConvert -= inputSlot.getItem().getCount();
+                inputSlot.set(ItemStack.EMPTY);
             }
         }
         addOrDrop(player, output, 64 - toConvert);
@@ -286,7 +284,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
     }
 
     public void onRecipeLocked(int recipeId, ServerPlayer player) {
-        if (recipeId != this.selectedRecipe.get()) {
+        if (recipeId != this.selectedRecipeIndex.get()) {
             return;
         }
 
@@ -296,7 +294,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
 
         ItemStack pScStack = player.getMainHandItem();
         CompoundTag nbtTagCompound = pScStack.getTag();
-        Item inputItem = this.itemStackInput.getItem();
+        Item inputItem = this.input.getItem();
 
         this.updateLockData(inputItem, this.recipes.get(recipeId));
 
@@ -305,11 +303,11 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             pScStack.setTag(nbtTagCompound);
         }
 
-        nbtTagCompound.putString("item", Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(inputItem)).toString());
+        nbtTagCompound.putString("item", Objects.requireNonNull(BuiltInRegistries.ITEM.getKey(inputItem)).toString());
         nbtTagCompound.putInt("recipeId", recipeId);
     }
 
-    public void updateLockData(Item inputItem, StonecutterRecipe recipe) {
+    public void updateLockData(Item inputItem, RecipeHolder<StonecutterRecipe> recipe) {
         this.lockedInput = inputItem;
         this.lockedRecipe = recipe;
     }
@@ -334,52 +332,46 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
         return recipeId >= 0 && recipeId < this.recipes.size();
     }
 
-    public int getSelectedRecipe() {
-        return this.selectedRecipe.get();
+    public int getSelectedRecipeIndex() {
+        return this.selectedRecipeIndex.get();
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public List<StonecutterRecipe> getRecipeList() {
+    public List<RecipeHolder<StonecutterRecipe>> getRecipeList() {
         return this.recipes;
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public int getRecipeListSize() {
+    public int getNumRecipes() {
         return this.recipes.size();
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public boolean hasItemsInInputSlot() {
-        return this.inputInventorySlot.hasItem() && !this.recipes.isEmpty();
+    public boolean hasInputItem() {
+        return this.inputSlot.hasItem() && !this.recipes.isEmpty();
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public StonecutterRecipe getLockedRecipe() {
+    public RecipeHolder<StonecutterRecipe> getLockedRecipe() {
         return this.lockedRecipe;
     }
 
-    @OnlyIn(Dist.CLIENT)
     public Item getLockedInput() {
         return this.lockedInput;
     }
 
     public void slotsChanged(Container inventoryIn) {
-        ItemStack itemstack = this.inputInventorySlot.getItem();
-        if (itemstack.getItem() != this.itemStackInput.getItem()) {
-            this.itemStackInput = itemstack.copy();
+        ItemStack itemstack = this.inputSlot.getItem();
+        if (!itemstack.is(this.input.getItem())) {
+            this.input = itemstack.copy();
             this.updateAvailableRecipes(inventoryIn, itemstack);
         }
-
     }
 
     private void updateAvailableRecipes(Container inventoryIn, ItemStack stack) {
         this.recipes.clear();
-        this.selectedRecipe.set(-1);
+        this.selectedRecipeIndex.set(-1);
         this.outputInventorySlot.set(ItemStack.EMPTY);
         if (!stack.isEmpty()) {
             this.recipes = this.world.getRecipeManager().getRecipesFor(RecipeType.STONECUTTING, inventoryIn, this.world);
             if (stack.getItem().equals(this.lockedInput)) {
-                this.selectedRecipe.set(this.recipes.indexOf(this.lockedRecipe));
+                this.selectedRecipeIndex.set(this.recipes.indexOf(this.lockedRecipe));
                 this.updateRecipeResultSlot();
             } else {
                 this.recipeLocked = false;
@@ -390,14 +382,14 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
     public void setRecipeLocked(boolean lock) {
         if (lock) {
             this.recipeLocked = isLockable();
-            if (this.recipeLocked) updateLockData(this.itemStackInput.getItem(), this.recipes.get(this.selectedRecipe.get()));
+            if (this.recipeLocked) updateLockData(this.input.getItem(), this.recipes.get(this.selectedRecipeIndex.get()));
         } else {
             this.recipeLocked = false;
         }
     }
 
     public boolean isLockable() {
-        return this.isRecipeIdValid(this.selectedRecipe.get()) && Block.byItem(this.recipes.get(this.selectedRecipe.get()).getResultItem(this.world.registryAccess()).getItem()) != Blocks.AIR;
+        return this.isRecipeIdValid(this.selectedRecipeIndex.get()) && Block.byItem(this.recipes.get(this.selectedRecipeIndex.get()).value().getResultItem(this.world.registryAccess()).getItem()) != Blocks.AIR;
     }
 
     public boolean isRecipeLocked() {

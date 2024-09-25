@@ -1,15 +1,10 @@
 package xyz.brckts.portablestonecutter;
 
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xyz.brckts.portablestonecutter.client.gui.PortableStonecutterScreen;
@@ -18,21 +13,16 @@ import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(PortableStonecutter.MOD_ID)
-public class PortableStonecutter
-{
+public class PortableStonecutter {
     public static final Logger LOGGER = LogManager.getLogger();
     public static final String MOD_ID = "portable_stonecutter";
 
-    public PortableStonecutter(FMLJavaModLoadingContext context) {
-        IEventBus modBus = context.getModEventBus();
+    public PortableStonecutter(IEventBus modBus) {
         modBus.addListener(this::clientSetup);
         RegistryHandler.init(modBus);
-        NetworkHandler.init();
+        modBus.addListener(NetworkHandler::register);
 
-        MinecraftForge.EVENT_BUS.register(this);
-    }
-
-    private void setup(final FMLCommonSetupEvent event) {
+        NeoForge.EVENT_BUS.addListener(this::clientSetup);
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {

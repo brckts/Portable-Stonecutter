@@ -16,6 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
@@ -23,9 +24,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
@@ -74,13 +75,13 @@ public class PortableStonecutterItem extends Item {
         }
 
         CompoundTag nbt = is.getTag();
-        StonecutterRecipe recipe = getRecipeFromNBT(world, nbt);
+        RecipeHolder<StonecutterRecipe> recipe = getRecipeFromNBT(world, nbt);
         Item inputItem = getInputItemFromNBT(nbt);
 
         if (recipe == null) return;
 
-        Block outputBlock = Block.byItem(recipe.getResultItem(world.registryAccess()).getItem());
-        int outputCnt = recipe.getResultItem(world.registryAccess()).getCount();
+        Block outputBlock = Block.byItem(recipe.value().getResultItem(world.registryAccess()).getItem());
+        int outputCnt = recipe.value().getResultItem(world.registryAccess()).getCount();
 
         if(outputBlock == Blocks.AIR) return;
 
@@ -112,7 +113,7 @@ public class PortableStonecutterItem extends Item {
             world.levelEvent(2001, blockPos, Block.getId(inputState));
 
             if (outputCnt > 1) {
-                player.drop(new ItemStack(recipe.getResultItem(player.level().registryAccess()).getItem(), outputCnt - 1), true, true);
+                player.drop(new ItemStack(recipe.value().getResultItem(player.level().registryAccess()).getItem(), outputCnt - 1), true, true);
             }
         }
     }

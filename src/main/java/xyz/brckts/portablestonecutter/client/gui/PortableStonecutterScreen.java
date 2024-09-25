@@ -1,12 +1,10 @@
 package xyz.brckts.portablestonecutter.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -14,9 +12,11 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.network.PacketDistributor;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 import xyz.brckts.portablestonecutter.network.MessageButtonPressed;
@@ -94,7 +94,7 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, BACKGROUND_TEXTURE);
@@ -112,13 +112,13 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
         if (this.menu.isRecipeLocked()) this.drawLockedItem(guiGraphics);
     }
     private void drawRecipeFrames(GuiGraphics guiGraphics, int mouseX, int mouseY, int recipeAreaStartX, int recipeAreaStartY, int lastShownRecipeIndex) {
-        for(int i = this.recipeIndexOffset; i < lastShownRecipeIndex && i < this.menu.getRecipeListSize(); ++i) {
+        for(int i = this.recipeIndexOffset; i < lastShownRecipeIndex && i < this.menu.getNumRecipes(); ++i) {
             int j = i - this.recipeIndexOffset;
             int columnStartX = recipeAreaStartX + j % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
             int line = j / RESULTS_PER_LINE;
             int lineStartY = recipeAreaStartY + line * RECIPE_TILE_HEIGHT + 2;
             int tileTextureStartY = this.imageHeight;
-            if (i == this.menu.getSelectedRecipe()) {
+            if (i == this.menu.getSelectedRecipeIndex()) {
                 tileTextureStartY += RECIPE_TILE_HEIGHT;
             } else if (mouseX >= columnStartX && mouseY >= lineStartY && mouseX < columnStartX + RECIPE_TILE_WIDTH && mouseY < lineStartY + RECIPE_TILE_HEIGHT) {
                 tileTextureStartY += RECIPE_TILE_HEIGHT * 2;
@@ -142,35 +142,35 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
             int i = this.leftPos + RECIPE_AREA_X_OFFSET;
             int j = this.topPos + RECIPE_AREA_Y_OFFSET;
             int k = this.recipeIndexOffset + RESULTS_MAX;
-            List<StonecutterRecipe> list = this.menu.getRecipeList();
+            List<RecipeHolder<StonecutterRecipe>> list = this.menu.getRecipeList();
 
-            for(int l = this.recipeIndexOffset; l < k && l < this.menu.getRecipeListSize(); ++l) {
+            for(int l = this.recipeIndexOffset; l < k && l < this.menu.getNumRecipes(); ++l) {
                 int i1 = l - this.recipeIndexOffset;
                 int j1 = i + i1 % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
                 int k1 = j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT + 2;
                 if (mouseX >= j1 && mouseX < j1 + RECIPE_TILE_WIDTH && mouseY >= k1 && mouseY < k1 + RECIPE_TILE_HEIGHT) {
-                    guiGraphics.renderTooltip(this.font, list.get(l).getResultItem(this.minecraft.level.registryAccess()), mouseX, mouseY);
+                    guiGraphics.renderTooltip(this.font, list.get(l).value().getResultItem(this.minecraft.level.registryAccess()), mouseX, mouseY);
                 }
             }
         }
     }
 
     private void drawRecipesItems(GuiGraphics guiGraphics, int left, int top, int recipeIndexOffsetMax) {
-        List<StonecutterRecipe> list = this.menu.getRecipeList();
+        List<RecipeHolder<StonecutterRecipe>> list = this.menu.getRecipeList();
 
-        for(int i = this.recipeIndexOffset; i < recipeIndexOffsetMax && i < this.menu.getRecipeListSize(); ++i) {
+        for(int i = this.recipeIndexOffset; i < recipeIndexOffsetMax && i < this.menu.getNumRecipes(); ++i) {
             int j = i - this.recipeIndexOffset;
             int k = left + j % RESULTS_PER_LINE * RECIPE_TILE_WIDTH;
             int l = j / RESULTS_PER_LINE;
             int i1 = top + l * RECIPE_TILE_HEIGHT + 2;
-            guiGraphics.renderItem(list.get(i).getResultItem(this.minecraft.level.registryAccess()), k, i1);
+            guiGraphics.renderItem(list.get(i).value().getResultItem(this.minecraft.level.registryAccess()), k, i1);
         }
     }
 
     private void drawLockedItem(GuiGraphics guiGraphics) {
         if (this.menu.getLockedRecipe() != null && this.menu.getLockedInput() != null) {
             RenderHelper.renderGhostItem(guiGraphics, this.minecraft, new ItemStack(this.menu.getLockedInput()), this.leftPos + INPUT_X, this.topPos + INPUT_Y);
-            RenderHelper.renderGhostItem(guiGraphics, this.minecraft, this.menu.getLockedRecipe().getResultItem(this.minecraft.level.registryAccess()), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y);
+            RenderHelper.renderGhostItem(guiGraphics, this.minecraft, this.menu.getLockedRecipe().value().getResultItem(this.minecraft.level.registryAccess()), this.leftPos + OUTPUT_X, this.topPos + OUTPUT_Y);
         }
     }
 
@@ -190,7 +190,7 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
                 double d1 = mouseY - (double) (j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT);
                 if (d0 >= 0.0D && d1 >= 0.0D && d0 < 16.0D && d1 < 18.0D && this.menu.selectRecipe(l)) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 1.0F));
-                    NetworkHandler.channel.sendToServer(new MessageSelectRecipe(l));
+                    PacketDistributor.SERVER.noArg().send(new MessageSelectRecipe(l));
                     return true;
                 }
             }
@@ -207,14 +207,14 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
             j = this.topPos + BUTTONS_START_Y;
             if (mouseX >= (double) i && mouseX < (double) (i + BUTTON_WIDTH) && mouseY >= (double) j && mouseY < (double) (j + BUTTON_HEIGHT)) {
                 this.clickedOnAll = true;
-                NetworkHandler.channel.sendToServer(new MessageButtonPressed(MessageButtonPressed.CRAFT_ALL_BUTTON));
+                PacketDistributor.SERVER.noArg().send(new MessageButtonPressed(MessageButtonPressed.CRAFT_ALL_BUTTON));
             }
 
             i = this.leftPos + BUTTONS_START_X + BUTTON_WIDTH;
             j = this.topPos + BUTTONS_START_Y;
             if (mouseX >= (double) i && mouseX < (double) (i + BUTTON_WIDTH) && mouseY >= (double) j && mouseY < (double) (j + BUTTON_HEIGHT)) {
                 this.clickedOn64 = true;
-                NetworkHandler.channel.sendToServer(new MessageButtonPressed(MessageButtonPressed.CRAFT_64_BUTTON));
+                PacketDistributor.SERVER.noArg().send(new MessageButtonPressed(MessageButtonPressed.CRAFT_64_BUTTON));
             }
         }
 
@@ -223,10 +223,10 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
         if (mouseX >= (double)i && mouseX < (double)(i + LOCK_BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + LOCK_BUTTON_HEIGHT)) {
             if (this.menu.isRecipeLocked()) {
                 this.menu.setRecipeLocked(false);
-                NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.menu.getSelectedRecipe(), false));
-            } else if (this.menu.getSelectedRecipe() != -1) {
+                PacketDistributor.SERVER.noArg().send(new MessageLockRecipe(this.menu.getSelectedRecipeIndex(), false));
+            } else if (this.menu.getSelectedRecipeIndex() != -1) {
                 this.menu.setRecipeLocked(true);
-                NetworkHandler.channel.sendToServer(new MessageLockRecipe(this.menu.getSelectedRecipe(), true));
+                PacketDistributor.SERVER.noArg().send(new MessageLockRecipe(this.menu.getSelectedRecipeIndex(), true));
             }
         }
 
@@ -265,18 +265,18 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
     }
 
     private boolean canScroll() {
-        return this.hasItemsInInputSlot && this.menu.getRecipeListSize() > RESULTS_MAX;
+        return this.hasItemsInInputSlot && this.menu.getNumRecipes() > RESULTS_MAX;
     }
 
     protected int getHiddenRows() {
-        return (this.menu.getRecipeListSize() + RESULTS_PER_LINE - 1) / RESULTS_PER_LINE - LINES_SHOWN;
+        return (this.menu.getNumRecipes() + RESULTS_PER_LINE - 1) / RESULTS_PER_LINE - LINES_SHOWN;
     }
 
     /**
      * Called every time this screen's container is changed (is marked as dirty).
      */
     private void onInventoryUpdate() {
-        this.hasItemsInInputSlot = this.menu.hasItemsInInputSlot();
+        this.hasItemsInInputSlot = this.menu.hasInputItem();
         if (!this.hasItemsInInputSlot) {
             this.sliderProgress = 0.0F;
             this.recipeIndexOffset = 0;

@@ -1,38 +1,37 @@
 package xyz.brckts.portablestonecutter.network;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
-import java.util.function.Supplier;
-
-
-public class MessageButtonPressed {
-
-    private final int buttonPressed;
+public record MessageButtonPressed(int buttonPressed) implements CustomPacketPayload {
+    public static final ResourceLocation ID = new ResourceLocation(PortableStonecutter.MOD_ID, "button_pressed");
     public static final int CRAFT_ALL_BUTTON = 1;
     public static final int CRAFT_64_BUTTON = 2;
 
-    public MessageButtonPressed(int buttonPressedIn) {
-        this.buttonPressed = buttonPressedIn;
+    public MessageButtonPressed(final FriendlyByteBuf buffer) {
+        this(buffer.readInt());
     }
 
-    public static MessageButtonPressed decode(FriendlyByteBuf buf) {
-        int buttonPressed = buf.readInt();
-        return new MessageButtonPressed(buttonPressed);
+    @Override
+    public void write(final FriendlyByteBuf buffer) {
+        buffer.writeInt(buttonPressed);
     }
 
-    public static void encode(MessageButtonPressed message, FriendlyByteBuf buf) {
-        buf.writeInt(message.buttonPressed);
+    @Override
+    public ResourceLocation id() {
+        return ID;
     }
 
-    public static void handle(MessageButtonPressed message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
+    public static void handle(final MessageButtonPressed message, final PlayPayloadContext context) {
+        context.workHandler().submitAsync(() -> {
+            ServerPlayer player = (ServerPlayer) context.player()
+                    .filter(p -> p instanceof ServerPlayer)
+                    .orElse(null);
             if (player == null) {
                 return;
             }
@@ -50,6 +49,5 @@ public class MessageButtonPressed {
                 PortableStonecutter.LOGGER.warn("Invalid messageId !");
             }
         });
-        context.setPacketHandled(true);
     }
 }

@@ -1,33 +1,34 @@
 package xyz.brckts.portablestonecutter.network;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
-import java.util.function.Supplier;
-
-public class MessageSelectRecipe {
-    private final int recipe;
-
-    public MessageSelectRecipe(int recipeSelected) {
-        this.recipe = recipeSelected;
+public record MessageSelectRecipe(int recipe) implements CustomPacketPayload {
+    public static final ResourceLocation ID = new ResourceLocation(PortableStonecutter.MOD_ID, "select_recipe");
+    public MessageSelectRecipe(final FriendlyByteBuf buffer) {
+        this(buffer.readInt());
     }
 
-    public static MessageSelectRecipe decode(FriendlyByteBuf buf) {
-        int recipeSelected = buf.readInt();
-        return new MessageSelectRecipe(recipeSelected);
+    @Override
+    public void write(final FriendlyByteBuf buffer) {
+        buffer.writeInt(recipe);
     }
 
-    public static void encode(MessageSelectRecipe message, FriendlyByteBuf buf) {
-        buf.writeInt(message.recipe);
+    @Override
+    public ResourceLocation id() {
+        return ID;
     }
 
-    public static void handle(MessageSelectRecipe message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
+    public static void handle(final MessageSelectRecipe message, final PlayPayloadContext context) {
+        context.workHandler().submitAsync(() -> {
+            ServerPlayer player = (ServerPlayer) context.player()
+                    .filter(p -> p instanceof ServerPlayer)
+                    .orElse(null);
             if (player == null) {
                 return;
             }
@@ -39,6 +40,5 @@ public class MessageSelectRecipe {
             PortableStonecutterContainer container = (PortableStonecutterContainer) player.containerMenu;
             container.selectRecipe(message.recipe);
         });
-        context.setPacketHandled(true);
     }
 }

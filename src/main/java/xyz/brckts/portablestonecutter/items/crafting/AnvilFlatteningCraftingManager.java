@@ -8,12 +8,13 @@ import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
@@ -48,11 +49,11 @@ public class AnvilFlatteningCraftingManager {
             inv.addItem(ie.getItem());
         }
 
-        Optional<AnvilFlatteningRecipe> recipeOptional = level.getRecipeManager().getRecipeFor(RegistryHandler.ANVIL_FLATTENING_RECIPE_TYPE.get(), inv, level);
+        Optional<RecipeHolder<AnvilFlatteningRecipe>> recipeOptional = level.getRecipeManager().getRecipeFor(RegistryHandler.ANVIL_FLATTENING_RECIPE_TYPE.get(), inv, level);
 
         if (!recipeOptional.isPresent()) return;
 
-        AnvilFlatteningRecipe recipe = recipeOptional.get();
+        AnvilFlatteningRecipe recipe = recipeOptional.get().value();
 
         if (recipe.getAllowedDim() != null && !level.dimension().location().equals(recipe.getAllowedDim())) return;
 
