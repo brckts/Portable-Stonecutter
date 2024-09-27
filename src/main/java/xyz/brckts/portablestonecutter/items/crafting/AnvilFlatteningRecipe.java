@@ -1,16 +1,18 @@
 package xyz.brckts.portablestonecutter.items.crafting;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
-import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.ArrayList;
@@ -92,7 +94,7 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return Serializer.INSTANCE;
+        return RegistryHandler.ANVIL_FLATTENING_SERIALIZER.get();
     }
 
     @Override
@@ -106,17 +108,16 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
     }
 
     public static class Serializer implements RecipeSerializer<AnvilFlatteningRecipe> {
+        private static final Codec<AnvilFlatteningRecipe> ANVIL_FLATTENING_RECIPE = RecordCodecBuilder.create(instance ->
+                instance.group(
+                        ResourceLocation.CODEC.optionalFieldOf("allowed_dim").forGetter(r -> Optional.ofNullable(r.getAllowedDim())),
+                        ItemStack.ITEM_WITH_COUNT_CODEC.fieldOf("output").forGetter(r -> r.output),
+                        NonNullList.codecOf(Ingredient.CODEC_NONEMPTY).fieldOf("ingredients").forGetter(AnvilFlatteningRecipe::getIngredients)
+                ).apply(instance, (allowedDim, output, inputs) -> new AnvilFlatteningRecipe(allowedDim.orElse(null), output, inputs)));
 
-        public static final Serializer INSTANCE = new Serializer();
-        public static final ResourceLocation ID = new ResourceLocation(PortableStonecutter.MOD_ID, "anvil_flattening");
         @Override
         public Codec<AnvilFlatteningRecipe> codec() {
-            return RecordCodecBuilder.create(instance ->
-                    instance.group(
-                            ResourceLocation.CODEC.optionalFieldOf("allowed_dim").forGetter(r -> Optional.ofNullable(r.getAllowedDim())),
-                            ItemStack.RESULT_CODEC.fieldOf("output").forGetter(r -> r.output),
-                            NonNullList.codecOf(Ingredient.CODEC_NONEMPTY).fieldOf("ingredients").forGetter(AnvilFlatteningRecipe::getIngredients)
-                    ).apply(instance, (allowedDim, output, ingredients) -> new AnvilFlatteningRecipe(allowedDim.orElse(null), output, ingredients)));
+            return ANVIL_FLATTENING_RECIPE;
         }
 
         @Override

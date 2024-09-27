@@ -1,9 +1,8 @@
 package xyz.brckts.portablestonecutter;
 
-import net.minecraft.client.gui.screens.MenuScreens;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,14 +17,12 @@ public class PortableStonecutter {
     public static final String MOD_ID = "portable_stonecutter";
 
     public PortableStonecutter(IEventBus modBus) {
-        modBus.addListener(this::clientSetup);
+        modBus.addListener(this::registerMenuScreens);
         RegistryHandler.init(modBus);
         modBus.addListener(NetworkHandler::register);
-
-        NeoForge.EVENT_BUS.addListener(this::clientSetup);
     }
 
-    private void clientSetup(final FMLClientSetupEvent event) {
-        MenuScreens.register(RegistryHandler.PORTABLE_STONECUTTER_CONTAINER.get(), PortableStonecutterScreen::new);
+    private void registerMenuScreens(final RegisterMenuScreensEvent event) {
+        event.register(RegistryHandler.PORTABLE_STONECUTTER_CONTAINER.get(), PortableStonecutterScreen::new);
     }
 }

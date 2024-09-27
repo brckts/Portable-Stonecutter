@@ -94,7 +94,6 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, BACKGROUND_TEXTURE);

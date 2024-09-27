@@ -42,7 +42,7 @@ public class RegistryHandler {
             MENU_TYPES.register("portable_stonecutter_container", () -> new MenuType<>(PortableStonecutterContainer::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<AnvilFlatteningRecipe>> ANVIL_FLATTENING_SERIALIZER =
-            SERIALIZERS.register("anvil_flattening", () -> AnvilFlatteningRecipe.Serializer.INSTANCE);
+            SERIALIZERS.register("anvil_flattening", AnvilFlatteningRecipe.Serializer::new);
 
     public static final DeferredHolder<RecipeType<?>, AnvilFlatteningRecipe.Type> ANVIL_FLATTENING_RECIPE_TYPE = RECIPE_TYPES.register(AnvilFlatteningRecipe.Type.ID, AnvilFlatteningRecipe.Type::new);
 
