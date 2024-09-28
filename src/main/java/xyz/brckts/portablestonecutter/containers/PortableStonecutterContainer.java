@@ -1,6 +1,7 @@
 package xyz.brckts.portablestonecutter.containers;
 
 import com.google.common.collect.Lists;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,6 +17,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -23,9 +25,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
+import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.items.PortableStonecutterItem;
 import xyz.brckts.portablestonecutter.network.MessageLockRecipe;
-import xyz.brckts.portablestonecutter.util.NBTHelper;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.List;
@@ -78,18 +80,22 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
         int startPlayerInvY = 84;
         int hotbarY = 142;
 
-        CompoundTag nbt = playerInventoryIn.getSelected().getTag();
+        this.world = playerInventoryIn.player.level();
 
-        if (nbt == null || !nbt.contains("item") || !nbt.contains("recipeId")) {
-            this.recipeLocked = false;
+        PortableStonecutterItem.Data data = PortableStonecutterItem.Data.get(playerInventoryIn.getSelected());
+        Holder<Item> inputItem = data.input();
+        RecipeHolder<StonecutterRecipe> recipe = data.recipe(this.world);
+
+        if (inputItem == null || recipe == null) {
             this.lockedRecipe = null;
+            this.lockedInput = null;
+            this.recipeLocked = false;
         } else {
-            this.lockedRecipe = NBTHelper.getRecipeFromNBT(playerInventoryIn.player.level(), nbt);
-            this.lockedInput = NBTHelper.getInputItemFromNBT(nbt);
-            if (lockedInput != null && lockedRecipe != null) this.recipeLocked = true;
+            this.lockedRecipe = recipe;
+            this.lockedInput = inputItem.value();
+            this.recipeLocked = true;
         }
 
-        this.world = playerInventoryIn.player.level();
         this.inputSlot = this.addSlot(new Slot(this.container, 0, startX + 4, inY + 4));
         this.outputInventorySlot = this.addSlot(new Slot(this.resultContainer, 1, startX + 4, outY + 4) {
             public boolean mayPlace(ItemStack stack) {
@@ -130,11 +136,11 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             if (!this.recipes.get(this.selectedRecipeIndex.get()).equals(this.lockedRecipe)) {
                 this.setRecipeLocked(false);
                 if (this.world.isClientSide())
-                    PacketDistributor.SERVER.noArg().send(new MessageLockRecipe(this.getSelectedRecipeIndex(), false));
+                    PacketDistributor.sendToServer(new MessageLockRecipe(this.getSelectedRecipeIndex(), false));
             }
             RecipeHolder<StonecutterRecipe> stonecutterrecipe = this.recipes.get(this.selectedRecipeIndex.get());
             this.inventory.setRecipeUsed(stonecutterrecipe);
-            this.outputInventorySlot.set(stonecutterrecipe.value().assemble(this.container, this.world.registryAccess()));
+            this.outputInventorySlot.set(stonecutterrecipe.value().assemble(new SingleRecipeInput(this.container.getItem(0)), this.world.registryAccess()));
         } else {
             this.outputInventorySlot.set(ItemStack.EMPTY);
         }
@@ -174,7 +180,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
                 if (!this.moveItemStackTo(itemstack1, 2, 38, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (this.world.getRecipeManager().getRecipeFor(RecipeType.STONECUTTING, new SimpleContainer(itemstack1), this.world).isPresent()) {
+            } else if (this.world.getRecipeManager().getRecipeFor(RecipeType.STONECUTTING, new SingleRecipeInput(itemstack1), this.world).isPresent()) {
                 if (!this.moveItemStackTo(itemstack1, 0, 1, false)) {
                     return ItemStack.EMPTY;
                 }
@@ -226,9 +232,11 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             input = this.input.getItem();
         }
 
+        ItemStack inputStack = new ItemStack(input);
+
         int inputCnt = inputSlot.getItem().getCount();
         for(ItemStack itemStack : player.getInventory().items) {
-            if (ItemStack.isSameItemSameTags(itemStack, new ItemStack(input))) {
+            if (ItemStack.isSameItemSameComponents(itemStack, inputStack)) {
                 inputCnt += itemStack.getCount();
                 itemStack.setCount(0);
             }
@@ -256,10 +264,12 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
             input = this.input.getItem();
         }
 
+        ItemStack inputStack = new ItemStack(input);
+
         int toConvert = 64;
         for (int i = 0; i < player.getInventory().getContainerSize() && toConvert > 0 ; ++i) {
             ItemStack stack = player.getInventory().getItem(i);
-            if(ItemStack.isSameItemSameTags(stack, new ItemStack(input))) {
+            if(ItemStack.isSameItemSameComponents(stack, inputStack)) {
                 if (toConvert >= stack.getCount()) {
                     toConvert -= stack.getCount();
                     player.getInventory().setItem(i, ItemStack.EMPTY);
@@ -293,18 +303,14 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
         }
 
         ItemStack pScStack = player.getMainHandItem();
-        CompoundTag nbtTagCompound = pScStack.getTag();
         Item inputItem = this.input.getItem();
 
         this.updateLockData(inputItem, this.recipes.get(recipeId));
 
-        if (nbtTagCompound == null) {
-            nbtTagCompound = new CompoundTag();
-            pScStack.setTag(nbtTagCompound);
-        }
-
-        nbtTagCompound.putString("item", Objects.requireNonNull(BuiltInRegistries.ITEM.getKey(inputItem)).toString());
-        nbtTagCompound.putInt("recipeId", recipeId);
+        PortableStonecutterItem.Data data = PortableStonecutterItem.Data.get(pScStack);
+        data = data.withInput(BuiltInRegistries.ITEM.getHolder(BuiltInRegistries.ITEM.getKey(inputItem)).orElse(null));
+        data = data.withRecipe(this.recipes.get(recipeId));
+        PortableStonecutterItem.Data.set(pScStack, data);
     }
 
     public void updateLockData(Item inputItem, RecipeHolder<StonecutterRecipe> recipe) {
@@ -320,12 +326,12 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
         this.lockedInput = null;
         this.lockedRecipe = null;
 
-        if(player.getMainHandItem().getTag() == null) {
-            return;
-        }
+        ItemStack itemStack = player.getMainHandItem();
 
-        player.getMainHandItem().getTag().remove("item");
-        player.getMainHandItem().getTag().remove("recipeId");
+        PortableStonecutterItem.Data data = PortableStonecutterItem.Data.get(itemStack);
+        data = data.withInput(null);
+        data = data.withRecipe(null);
+        PortableStonecutterItem.Data.set(itemStack, data);
     }
 
     public boolean isRecipeIdValid(int recipeId) {
@@ -369,7 +375,7 @@ public class PortableStonecutterContainer extends AbstractContainerMenu {
         this.selectedRecipeIndex.set(-1);
         this.outputInventorySlot.set(ItemStack.EMPTY);
         if (!stack.isEmpty()) {
-            this.recipes = this.world.getRecipeManager().getRecipesFor(RecipeType.STONECUTTING, inventoryIn, this.world);
+            this.recipes = this.world.getRecipeManager().getRecipesFor(RecipeType.STONECUTTING, new SingleRecipeInput(inventoryIn.getItem(0)), this.world);
             if (stack.getItem().equals(this.lockedInput)) {
                 this.selectedRecipeIndex.set(this.recipes.indexOf(this.lockedRecipe));
                 this.updateRecipeResultSlot();

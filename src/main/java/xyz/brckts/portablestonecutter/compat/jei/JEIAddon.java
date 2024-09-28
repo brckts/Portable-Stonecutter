@@ -22,7 +22,7 @@ import java.util.List;
 public class JEIAddon implements IModPlugin {
     @Override
     public ResourceLocation getPluginUid() {
-        return new ResourceLocation(PortableStonecutter.MOD_ID, "jei");
+        return ResourceLocation.fromNamespaceAndPath(PortableStonecutter.MOD_ID, "jei");
     }
 
     @Override

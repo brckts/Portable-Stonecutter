@@ -3,28 +3,33 @@ package xyz.brckts.portablestonecutter.items.crafting;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ExtraCodecs;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
+import xyz.brckts.portablestonecutter.items.EnderPortableStonecutterItem;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
+public class AnvilFlatteningRecipe implements Recipe<AnvilFlatteningInput> {
 
     final ItemStack output;
     private final NonNullList<Ingredient> inputs;
     //private final ResourceLocation allowedDim;
     private final ResourceLocation allowedDim;
+
+    public AnvilFlatteningRecipe(Optional<ResourceLocation> allowedDim, ItemStack output, NonNullList<Ingredient> inputs) {
+        this(allowedDim.orElse(null), output, inputs);
+    }
 
     public AnvilFlatteningRecipe(ResourceLocation allowedDim, ItemStack output, NonNullList<Ingredient> inputs) {
         this.output = output;
@@ -33,11 +38,11 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
     }
 
     @Override
-    public boolean matches(SimpleContainer inv, Level pLevel) {
+    public boolean matches(AnvilFlatteningInput inv, Level pLevel) {
 
         List<Ingredient> ingredientsMissing = new ArrayList<>(this.inputs);
 
-        for (int i = 0; i < inv.getContainerSize(); i++) {
+        for (int i = 0; i < inv.size(); i++) {
             ItemStack input = inv.getItem(i);
             if (input.isEmpty()) {
                 break;
@@ -69,7 +74,7 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
 
 
     @Override
-    public ItemStack assemble(SimpleContainer pContainer, RegistryAccess registryAccess) {
+    public ItemStack assemble(AnvilFlatteningInput pContainer, HolderLookup.Provider pRegistries) {
         return this.output;
     }
 
@@ -79,12 +84,16 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
     }
 
     @Override
-    public ItemStack getResultItem(RegistryAccess registryAccess) {
+    public ItemStack getResultItem(HolderLookup.Provider pRegistries) {
         return this.output.copy();
     }
 
     public ResourceLocation getAllowedDim() {
         return this.allowedDim;
+    }
+
+    private Optional<ResourceLocation> getAllowedDimOptional() {
+        return Optional.ofNullable(this.allowedDim);
     }
 
     @Override
@@ -108,49 +117,28 @@ public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
     }
 
     public static class Serializer implements RecipeSerializer<AnvilFlatteningRecipe> {
-        private static final Codec<AnvilFlatteningRecipe> ANVIL_FLATTENING_RECIPE = RecordCodecBuilder.create(instance ->
+        private static final MapCodec<AnvilFlatteningRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
                 instance.group(
-                        ResourceLocation.CODEC.optionalFieldOf("allowed_dim").forGetter(r -> Optional.ofNullable(r.getAllowedDim())),
-                        ItemStack.ITEM_WITH_COUNT_CODEC.fieldOf("output").forGetter(r -> r.output),
+                        ResourceLocation.CODEC.optionalFieldOf("allowed_dim").forGetter(AnvilFlatteningRecipe::getAllowedDimOptional),
+                        ItemStack.STRICT_CODEC.fieldOf("output").forGetter(r -> r.output),
                         NonNullList.codecOf(Ingredient.CODEC_NONEMPTY).fieldOf("ingredients").forGetter(AnvilFlatteningRecipe::getIngredients)
                 ).apply(instance, (allowedDim, output, inputs) -> new AnvilFlatteningRecipe(allowedDim.orElse(null), output, inputs)));
 
+        private static final StreamCodec<RegistryFriendlyByteBuf, AnvilFlatteningRecipe> STREAM_CODEC = StreamCodec.composite(
+                ResourceLocation.STREAM_CODEC.apply(ByteBufCodecs::optional), AnvilFlatteningRecipe::getAllowedDimOptional,
+                ItemStack.STREAM_CODEC, r -> r.output,
+                Ingredient.CONTENTS_STREAM_CODEC.apply(ByteBufCodecs.collection(size -> NonNullList.withSize(size, Ingredient.EMPTY))), AnvilFlatteningRecipe::getIngredients,
+                AnvilFlatteningRecipe::new
+        );
+
         @Override
-        public Codec<AnvilFlatteningRecipe> codec() {
-            return ANVIL_FLATTENING_RECIPE;
+        public MapCodec<AnvilFlatteningRecipe> codec() {
+            return CODEC;
         }
 
         @Override
-        public AnvilFlatteningRecipe fromNetwork(FriendlyByteBuf buf) {
-            NonNullList<Ingredient> inputs = NonNullList.withSize(buf.readInt(), Ingredient.EMPTY);
-            for (int i = 0; i < inputs.size(); i++) {
-                inputs.set(i, Ingredient.fromNetwork(buf));
-            }
-
-            ItemStack output = buf.readItem();
-            ResourceLocation allowedDim = null;
-
-            if (buf.readBoolean()) {
-                allowedDim = buf.readResourceLocation();
-            }
-
-            return new AnvilFlatteningRecipe(allowedDim, output, inputs);
-        }
-
-        @Override
-        public void toNetwork(FriendlyByteBuf buf, AnvilFlatteningRecipe recipe) {
-            buf.writeInt(recipe.getIngredients().size());
-            for (Ingredient input : recipe.getIngredients()) {
-                input.toNetwork(buf);
-            }
-
-            buf.writeItem(recipe.output);
-            if (recipe.getAllowedDim() != null) {
-                buf.writeBoolean(true);
-                buf.writeResourceLocation(recipe.getAllowedDim());
-            } else {
-                buf.writeBoolean(false);
-            }
+        public StreamCodec<RegistryFriendlyByteBuf, AnvilFlatteningRecipe> streamCodec() {
+            return STREAM_CODEC;
         }
     }
 }

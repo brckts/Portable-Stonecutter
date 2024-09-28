@@ -22,7 +22,6 @@ import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 import xyz.brckts.portablestonecutter.network.MessageButtonPressed;
 import xyz.brckts.portablestonecutter.network.MessageLockRecipe;
 import xyz.brckts.portablestonecutter.network.MessageSelectRecipe;
-import xyz.brckts.portablestonecutter.network.NetworkHandler;
 import xyz.brckts.portablestonecutter.util.client.RenderHelper;
 
 import java.util.List;
@@ -68,7 +67,7 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
     final static int TITLE_X = 41;
     final static int TITLE_Y = 5;
 
-    private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(PortableStonecutter.MOD_ID, "textures/gui/portable_stonecutter_gui.png");
+    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(PortableStonecutter.MOD_ID, "textures/gui/portable_stonecutter_gui.png");
 
     public PortableStonecutterScreen(PortableStonecutterContainer screenContainer, Inventory inv, Component titleIn) {
         super(screenContainer, inv, titleIn);
@@ -189,7 +188,7 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
                 double d1 = mouseY - (double) (j + i1 / RESULTS_PER_LINE * RECIPE_TILE_HEIGHT);
                 if (d0 >= 0.0D && d1 >= 0.0D && d0 < 16.0D && d1 < 18.0D && this.menu.selectRecipe(l)) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 1.0F));
-                    PacketDistributor.SERVER.noArg().send(new MessageSelectRecipe(l));
+                    PacketDistributor.sendToServer(new MessageSelectRecipe(l));
                     return true;
                 }
             }
@@ -206,14 +205,14 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
             j = this.topPos + BUTTONS_START_Y;
             if (mouseX >= (double) i && mouseX < (double) (i + BUTTON_WIDTH) && mouseY >= (double) j && mouseY < (double) (j + BUTTON_HEIGHT)) {
                 this.clickedOnAll = true;
-                PacketDistributor.SERVER.noArg().send(new MessageButtonPressed(MessageButtonPressed.CRAFT_ALL_BUTTON));
+                PacketDistributor.sendToServer(new MessageButtonPressed(MessageButtonPressed.CRAFT_ALL_BUTTON));
             }
 
             i = this.leftPos + BUTTONS_START_X + BUTTON_WIDTH;
             j = this.topPos + BUTTONS_START_Y;
             if (mouseX >= (double) i && mouseX < (double) (i + BUTTON_WIDTH) && mouseY >= (double) j && mouseY < (double) (j + BUTTON_HEIGHT)) {
                 this.clickedOn64 = true;
-                PacketDistributor.SERVER.noArg().send(new MessageButtonPressed(MessageButtonPressed.CRAFT_64_BUTTON));
+                PacketDistributor.sendToServer(new MessageButtonPressed(MessageButtonPressed.CRAFT_64_BUTTON));
             }
         }
 
@@ -222,10 +221,10 @@ public class PortableStonecutterScreen extends AbstractContainerScreen<PortableS
         if (mouseX >= (double)i && mouseX < (double)(i + LOCK_BUTTON_WIDTH) && mouseY >= (double)j && mouseY < (double)(j + LOCK_BUTTON_HEIGHT)) {
             if (this.menu.isRecipeLocked()) {
                 this.menu.setRecipeLocked(false);
-                PacketDistributor.SERVER.noArg().send(new MessageLockRecipe(this.menu.getSelectedRecipeIndex(), false));
+                PacketDistributor.sendToServer(new MessageLockRecipe(this.menu.getSelectedRecipeIndex(), false));
             } else if (this.menu.getSelectedRecipeIndex() != -1) {
                 this.menu.setRecipeLocked(true);
-                PacketDistributor.SERVER.noArg().send(new MessageLockRecipe(this.menu.getSelectedRecipeIndex(), true));
+                PacketDistributor.sendToServer(new MessageLockRecipe(this.menu.getSelectedRecipeIndex(), true));
             }
         }
 

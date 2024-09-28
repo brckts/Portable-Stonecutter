@@ -13,7 +13,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Mod.EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class AnvilFlatteningCraftingManager {
 
     @SubscribeEvent
@@ -43,11 +43,13 @@ public class AnvilFlatteningCraftingManager {
         if (level.isClientSide()) return;
 
         List<ItemEntity> itemEntityList = level.getEntitiesOfClass(ItemEntity.class, new AABB(pos));
-        SimpleContainer inv = new SimpleContainer(itemEntityList.size());
+        NonNullList<ItemStack> inputItems = NonNullList.withSize(0, ItemStack.EMPTY);
 
         for(ItemEntity ie : itemEntityList) {
-            inv.addItem(ie.getItem());
+            inputItems.add(ie.getItem());
         }
+
+        AnvilFlatteningInput inv = new AnvilFlatteningInput(inputItems);
 
         Optional<RecipeHolder<AnvilFlatteningRecipe>> recipeOptional = level.getRecipeManager().getRecipeFor(RegistryHandler.ANVIL_FLATTENING_RECIPE_TYPE.get(), inv, level);
 

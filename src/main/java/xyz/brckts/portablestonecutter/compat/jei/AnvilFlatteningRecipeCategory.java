@@ -28,7 +28,7 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
             RecipeType.create(PortableStonecutter.MOD_ID, "anvil_flattening", AnvilFlatteningRecipe.class);
 
 
-    private static final ResourceLocation texture = new ResourceLocation(PortableStonecutter.MOD_ID, "textures/gui/jei_anvil_flattening.png");
+    private static final ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(PortableStonecutter.MOD_ID, "textures/gui/jei_anvil_flattening.png");
 
     private final IDrawableStatic background;
     private final IDrawable icon;

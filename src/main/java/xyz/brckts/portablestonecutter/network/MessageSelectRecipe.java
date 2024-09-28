@@ -1,44 +1,38 @@
 package xyz.brckts.portablestonecutter.network;
 
-import net.minecraft.network.FriendlyByteBuf;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
 public record MessageSelectRecipe(int recipe) implements CustomPacketPayload {
-    public static final ResourceLocation ID = new ResourceLocation(PortableStonecutter.MOD_ID, "select_recipe");
-    public MessageSelectRecipe(final FriendlyByteBuf buffer) {
-        this(buffer.readInt());
-    }
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(PortableStonecutter.MOD_ID, "select_recipe");
+    public static final CustomPacketPayload.Type<MessageSelectRecipe> TYPE = new CustomPacketPayload.Type<>(ID);
+    public static final StreamCodec<ByteBuf, MessageSelectRecipe> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.VAR_INT,
+            MessageSelectRecipe::recipe,
+            MessageSelectRecipe::new
+    );
 
     @Override
-    public void write(final FriendlyByteBuf buffer) {
-        buffer.writeInt(recipe);
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    @Override
-    public ResourceLocation id() {
-        return ID;
-    }
+    public static void handle(final MessageSelectRecipe message, final IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
 
-    public static void handle(final MessageSelectRecipe message, final PlayPayloadContext context) {
-        context.workHandler().submitAsync(() -> {
-            ServerPlayer player = (ServerPlayer) context.player()
-                    .filter(p -> p instanceof ServerPlayer)
-                    .orElse(null);
-            if (player == null) {
-                return;
-            }
+        if (!(player.containerMenu instanceof PortableStonecutterContainer container)) {
+            return;
+        }
 
-            if (!(player.containerMenu instanceof PortableStonecutterContainer)) {
-                return;
-            }
-
-            PortableStonecutterContainer container = (PortableStonecutterContainer) player.containerMenu;
-            container.selectRecipe(message.recipe);
-        });
+        container.selectRecipe(message.recipe);
     }
 }
