@@ -74,7 +74,7 @@ public class EnderPortableStonecutterItem extends PortableStonecutterItem {
 
         if (playerIn.isCrouching()) {
             nextEPSCMode(stack);
-            playerIn.displayClientMessage(Component.translatable("info.portable_stonecutter.epsc.mode." + getMode(stack).name().toLowerCase(), ChatFormatting.RED).withStyle(ChatFormatting.DARK_GREEN), true);
+            playerIn.displayClientMessage(Component.translatable("info.portable_stonecutter.epsc.mode." + getMode(stack).name().toLowerCase()).withStyle(ChatFormatting.DARK_GREEN), true);
             return InteractionResultHolder.success(stack);
         }
 

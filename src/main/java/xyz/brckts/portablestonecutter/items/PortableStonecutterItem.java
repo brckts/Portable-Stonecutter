@@ -95,6 +95,10 @@ public class PortableStonecutterItem extends Item {
 
         @SuppressWarnings("unchecked")
         public RecipeHolder<StonecutterRecipe> recipe(Level level) {
+            if (recipe == null) {
+                return null;
+            }
+
             return (RecipeHolder<StonecutterRecipe>) level.getRecipeManager().byKey(recipe.id())
                     .filter(r -> r.value().getType().equals(RecipeType.STONECUTTING))
                     .orElse(null);

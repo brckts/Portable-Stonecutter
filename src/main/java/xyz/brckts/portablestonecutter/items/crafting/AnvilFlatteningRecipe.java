@@ -17,6 +17,7 @@ import xyz.brckts.portablestonecutter.items.EnderPortableStonecutterItem;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -120,14 +121,14 @@ public class AnvilFlatteningRecipe implements Recipe<AnvilFlatteningInput> {
         private static final MapCodec<AnvilFlatteningRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
                 instance.group(
                         ResourceLocation.CODEC.optionalFieldOf("allowed_dim").forGetter(AnvilFlatteningRecipe::getAllowedDimOptional),
-                        ItemStack.STRICT_CODEC.fieldOf("output").forGetter(r -> r.output),
+                        ItemStack.STRICT_CODEC.fieldOf("result").forGetter(r -> r.output),
                         NonNullList.codecOf(Ingredient.CODEC_NONEMPTY).fieldOf("ingredients").forGetter(AnvilFlatteningRecipe::getIngredients)
                 ).apply(instance, (allowedDim, output, inputs) -> new AnvilFlatteningRecipe(allowedDim.orElse(null), output, inputs)));
 
         private static final StreamCodec<RegistryFriendlyByteBuf, AnvilFlatteningRecipe> STREAM_CODEC = StreamCodec.composite(
                 ResourceLocation.STREAM_CODEC.apply(ByteBufCodecs::optional), AnvilFlatteningRecipe::getAllowedDimOptional,
                 ItemStack.STREAM_CODEC, r -> r.output,
-                Ingredient.CONTENTS_STREAM_CODEC.apply(ByteBufCodecs.collection(size -> NonNullList.withSize(size, Ingredient.EMPTY))), AnvilFlatteningRecipe::getIngredients,
+                Ingredient.CONTENTS_STREAM_CODEC.apply(ByteBufCodecs.list()).map(NonNullList::copyOf, ingredients -> ingredients), AnvilFlatteningRecipe::getIngredients,
                 AnvilFlatteningRecipe::new
         );
 

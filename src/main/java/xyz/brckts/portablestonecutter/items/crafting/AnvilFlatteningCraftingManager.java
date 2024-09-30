@@ -21,6 +21,7 @@ import xyz.brckts.portablestonecutter.util.RegistryHandler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class AnvilFlatteningCraftingManager {
@@ -43,13 +44,10 @@ public class AnvilFlatteningCraftingManager {
         if (level.isClientSide()) return;
 
         List<ItemEntity> itemEntityList = level.getEntitiesOfClass(ItemEntity.class, new AABB(pos));
-        NonNullList<ItemStack> inputItems = NonNullList.withSize(0, ItemStack.EMPTY);
 
-        for(ItemEntity ie : itemEntityList) {
-            inputItems.add(ie.getItem());
-        }
-
-        AnvilFlatteningInput inv = new AnvilFlatteningInput(inputItems);
+        AnvilFlatteningInput inv = new AnvilFlatteningInput(NonNullList.copyOf(itemEntityList.stream()
+                .map(ItemEntity::getItem)
+                .toList()));
 
         Optional<RecipeHolder<AnvilFlatteningRecipe>> recipeOptional = level.getRecipeManager().getRecipeFor(RegistryHandler.ANVIL_FLATTENING_RECIPE_TYPE.get(), inv, level);
 
