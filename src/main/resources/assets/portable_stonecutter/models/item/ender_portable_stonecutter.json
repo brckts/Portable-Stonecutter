@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "item/generated",
   "textures": {
-    "layer0": "portable_stonecutter:item/ender_portable_stonecutter"
+    "layer0": "portable_stonecutter:items/ender_portable_stonecutter"
   }
 }

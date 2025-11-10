@@ -1,49 +1,43 @@
 package xyz.brckts.portablestonecutter.items.crafting;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.HolderLookup;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
-import xyz.brckts.portablestonecutter.items.EnderPortableStonecutterItem;
-import xyz.brckts.portablestonecutter.util.RegistryHandler;
+import org.jetbrains.annotations.Nullable;
+import xyz.brckts.portablestonecutter.PortableStonecutter;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class AnvilFlatteningRecipe implements Recipe<AnvilFlatteningInput> {
+public class AnvilFlatteningRecipe implements Recipe<SimpleContainer> {
 
-    final ItemStack output;
+    private final ResourceLocation id;
+    private final ItemStack output;
     private final NonNullList<Ingredient> inputs;
     //private final ResourceLocation allowedDim;
     private final ResourceLocation allowedDim;
 
-    public AnvilFlatteningRecipe(Optional<ResourceLocation> allowedDim, ItemStack output, NonNullList<Ingredient> inputs) {
-        this(allowedDim.orElse(null), output, inputs);
-    }
-
-    public AnvilFlatteningRecipe(ResourceLocation allowedDim, ItemStack output, NonNullList<Ingredient> inputs) {
+    public AnvilFlatteningRecipe(ResourceLocation id, ResourceLocation allowedDim, ItemStack output, NonNullList<Ingredient> inputs) {
+        this.id = id;
         this.output = output;
         this.inputs = inputs;
         this.allowedDim = allowedDim;
     }
 
     @Override
-    public boolean matches(AnvilFlatteningInput inv, Level pLevel) {
+    public boolean matches(SimpleContainer inv, Level pLevel) {
 
         List<Ingredient> ingredientsMissing = new ArrayList<>(this.inputs);
 
-        for (int i = 0; i < inv.size(); i++) {
+        for (int i = 0; i < inv.getContainerSize(); i++) {
             ItemStack input = inv.getItem(i);
             if (input.isEmpty()) {
                 break;
@@ -75,7 +69,7 @@ public class AnvilFlatteningRecipe implements Recipe<AnvilFlatteningInput> {
 
 
     @Override
-    public ItemStack assemble(AnvilFlatteningInput pContainer, HolderLookup.Provider pRegistries) {
+    public ItemStack assemble(SimpleContainer pContainer) {
         return this.output;
     }
 
@@ -85,16 +79,12 @@ public class AnvilFlatteningRecipe implements Recipe<AnvilFlatteningInput> {
     }
 
     @Override
-    public ItemStack getResultItem(HolderLookup.Provider pRegistries) {
+    public ItemStack getResultItem() {
         return this.output.copy();
     }
 
     public ResourceLocation getAllowedDim() {
         return this.allowedDim;
-    }
-
-    private Optional<ResourceLocation> getAllowedDimOptional() {
-        return Optional.ofNullable(this.allowedDim);
     }
 
     @Override
@@ -103,43 +93,107 @@ public class AnvilFlatteningRecipe implements Recipe<AnvilFlatteningInput> {
     }
 
     @Override
+    public ResourceLocation getId() {
+        return this.id;
+    }
+
+    @Override
     public RecipeSerializer<?> getSerializer() {
-        return RegistryHandler.ANVIL_FLATTENING_SERIALIZER.get();
+        return Serializer.INSTANCE;
     }
 
     @Override
     public RecipeType<?> getType() {
-        return RegistryHandler.ANVIL_FLATTENING_RECIPE_TYPE.get();
+        return Type.INSTANCE;
     }
 
     public static class Type implements RecipeType<AnvilFlatteningRecipe> {
-        public Type() {}
+        private Type() {}
+        public static final Type INSTANCE = new Type();
         public static final String ID = "anvil_flattening";
     }
 
     public static class Serializer implements RecipeSerializer<AnvilFlatteningRecipe> {
-        private static final MapCodec<AnvilFlatteningRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
-                instance.group(
-                        ResourceLocation.CODEC.optionalFieldOf("allowed_dim").forGetter(AnvilFlatteningRecipe::getAllowedDimOptional),
-                        ItemStack.STRICT_CODEC.fieldOf("result").forGetter(r -> r.output),
-                        NonNullList.codecOf(Ingredient.CODEC_NONEMPTY).fieldOf("ingredients").forGetter(AnvilFlatteningRecipe::getIngredients)
-                ).apply(instance, (allowedDim, output, inputs) -> new AnvilFlatteningRecipe(allowedDim.orElse(null), output, inputs)));
 
-        private static final StreamCodec<RegistryFriendlyByteBuf, AnvilFlatteningRecipe> STREAM_CODEC = StreamCodec.composite(
-                ResourceLocation.STREAM_CODEC.apply(ByteBufCodecs::optional), AnvilFlatteningRecipe::getAllowedDimOptional,
-                ItemStack.STREAM_CODEC, r -> r.output,
-                Ingredient.CONTENTS_STREAM_CODEC.apply(ByteBufCodecs.list()).map(NonNullList::copyOf, ingredients -> ingredients), AnvilFlatteningRecipe::getIngredients,
-                AnvilFlatteningRecipe::new
-        );
-
+        public static final Serializer INSTANCE = new Serializer();
+        public static final ResourceLocation ID = new ResourceLocation(PortableStonecutter.MOD_ID, "anvil_flattening");
         @Override
-        public MapCodec<AnvilFlatteningRecipe> codec() {
-            return CODEC;
+        public AnvilFlatteningRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
+            ResourceLocation allowedDim;
+
+            if (json.has("allowed_dim")) {
+                String dim = GsonHelper.getAsString(json, "allowed_dim");
+                if (dim.isEmpty()) {
+                    allowedDim = null;
+                } else {
+                    allowedDim = ResourceLocation.tryParse(dim);
+                }
+            } else {
+                allowedDim = null;
+            }
+
+            ItemStack output = ShapedRecipe.itemStackFromJson(GsonHelper.getAsJsonObject(json, "output"));
+            JsonArray ingrs = GsonHelper.getAsJsonArray(json, "ingredients");
+            NonNullList<Ingredient> inputs = NonNullList.withSize(ingrs.size(), Ingredient.EMPTY);
+
+            for (int i = 0; i < inputs.size(); i++) {
+                inputs.set(i, Ingredient.fromJson(ingrs.get(i)));
+            }
+
+            return new AnvilFlatteningRecipe(recipeId, allowedDim, output, inputs);
         }
 
         @Override
-        public StreamCodec<RegistryFriendlyByteBuf, AnvilFlatteningRecipe> streamCodec() {
-            return STREAM_CODEC;
+        public AnvilFlatteningRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buf) {
+            NonNullList<Ingredient> inputs = NonNullList.withSize(buf.readInt(), Ingredient.EMPTY);
+            for (int i = 0; i < inputs.size(); i++) {
+                inputs.set(i, Ingredient.fromNetwork(buf));
+            }
+
+            ItemStack output = buf.readItem();
+            ResourceLocation allowedDim = null;
+
+            if (buf.readBoolean()) {
+                allowedDim = buf.readResourceLocation();
+            }
+
+            return new AnvilFlatteningRecipe(recipeId, allowedDim, output, inputs);
+        }
+
+        @Override
+        public void toNetwork(FriendlyByteBuf buf, AnvilFlatteningRecipe recipe) {
+            buf.writeInt(recipe.getIngredients().size());
+            for (Ingredient input : recipe.getIngredients()) {
+                input.toNetwork(buf);
+            }
+
+            buf.writeItemStack(recipe.getResultItem(), false);
+            if (recipe.getAllowedDim() != null) {
+                buf.writeBoolean(true);
+                buf.writeResourceLocation(recipe.getAllowedDim());
+            } else {
+                buf.writeBoolean(false);
+            }
+        }
+
+        @Override
+        public RecipeSerializer<?> setRegistryName(ResourceLocation name) {
+            return INSTANCE;
+        }
+
+        @Nullable
+        @Override
+        public ResourceLocation getRegistryName() {
+            return ID;
+        }
+
+        @Override
+        public Class<RecipeSerializer<?>> getRegistryType() {
+            return Serializer.castClass(RecipeSerializer.class);
+        }
+
+        private static <G> Class<G> castClass(Class<?> cls) {
+            return (Class<G>) cls;
         }
     }
 }

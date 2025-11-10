@@ -8,9 +8,8 @@
       "item": "minecraft:ender_pearl"
     }
   ],
-  "result":  {
-    "count": 1,
-    "id": "portable_stonecutter:ender_portable_stonecutter"
+  "output":  {
+    "item": "portable_stonecutter:ender_portable_stonecutter"
   },
   "allowed_dim": "minecraft:the_end"
 }
