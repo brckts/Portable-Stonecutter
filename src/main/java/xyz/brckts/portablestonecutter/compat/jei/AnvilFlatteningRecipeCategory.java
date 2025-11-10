@@ -11,8 +11,8 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -28,7 +28,7 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
             RecipeType.create(PortableStonecutter.MOD_ID, "anvil_flattening", AnvilFlatteningRecipe.class);
 
 
-    private static final ResourceLocation texture = new ResourceLocation(PortableStonecutter.MOD_ID, "textures/gui/jei_anvil_flattening.png");
+    private static final ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(PortableStonecutter.MOD_ID, "textures/gui/jei_anvil_flattening.png");
 
     private final IDrawableStatic background;
     private final IDrawable icon;
@@ -38,7 +38,7 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
     public AnvilFlatteningRecipeCategory(IGuiHelper guiHelper) {
         this.background = guiHelper.createBlankDrawable(90, 70);
         this.icon = guiHelper.createDrawableItemStack(new ItemStack(Items.ANVIL));
-        this.title = new TranslatableComponent("jei." + RECIPE_TYPE.getUid());
+        this.title = Component.translatable("jei." + RECIPE_TYPE.getUid());
         //this.overlay = guiHelper.createDrawable(texture, 0, 0, 64, 64);
     }
 
@@ -79,12 +79,12 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
             index++;
         }
 
-        builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(recipe.getResultItem());
+        builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(recipe.getResultItem(Minecraft.getInstance().level.registryAccess()));
     }
 
 
     @Override
-    public void draw(AnvilFlatteningRecipe recipe, IRecipeSlotsView recipeSlotsView, PoseStack poseStack, double mouseX, double mouseY) {
+    public void draw(AnvilFlatteningRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics guiGraphics, double mouseX, double mouseY) {
         /*RenderSystem.enableBlend();
         overlay.draw(stack, 13, 20);
         RenderSystem.disableBlend();*/
@@ -100,22 +100,9 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatt
         int x = this.background.getWidth() - width - 1;
         int y = this.background.getHeight() + height + 1;
 
-        minecraft.font.draw(poseStack, text, x + 1, y, shadowColor);
-        minecraft.font.draw(poseStack, text, x, y + 1, shadowColor);
-        minecraft.font.draw(poseStack, text, x + 1, y + 1, shadowColor);
-        minecraft.font.draw(poseStack, text, x, y, mainColor);
-    }
-
-    @SuppressWarnings("removal")
-    @Override
-    public ResourceLocation getUid() {
-        return getRecipeType().getUid();
-    }
-
-
-    @SuppressWarnings("removal")
-    @Override
-    public Class<? extends AnvilFlatteningRecipe> getRecipeClass() {
-        return getRecipeType().getRecipeClass();
+        guiGraphics.drawString(minecraft.font, text, x + 1, y, shadowColor);
+        guiGraphics.drawString(minecraft.font, text, x, y + 1, shadowColor);
+        guiGraphics.drawString(minecraft.font, text, x + 1, y + 1, shadowColor);
+        guiGraphics.drawString(minecraft.font, text, x, y, mainColor);
     }
 }

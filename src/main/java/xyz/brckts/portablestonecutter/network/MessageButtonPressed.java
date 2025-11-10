@@ -1,55 +1,45 @@
 package xyz.brckts.portablestonecutter.network;
 
-import net.minecraft.network.FriendlyByteBuf;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
-import java.util.function.Supplier;
+public record MessageButtonPressed(int buttonPressed) implements CustomPacketPayload {
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(PortableStonecutter.MOD_ID, "button_pressed");
+    public static final CustomPacketPayload.Type<MessageButtonPressed> TYPE = new CustomPacketPayload.Type<>(ID);
+    public static final StreamCodec<ByteBuf, MessageButtonPressed> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.VAR_INT,
+            MessageButtonPressed::buttonPressed,
+            MessageButtonPressed::new
+    );
 
-
-public class MessageButtonPressed {
-
-    private final int buttonPressed;
     public static final int CRAFT_ALL_BUTTON = 1;
     public static final int CRAFT_64_BUTTON = 2;
 
-    public MessageButtonPressed(int buttonPressedIn) {
-        this.buttonPressed = buttonPressedIn;
+    @Override
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static MessageButtonPressed decode(FriendlyByteBuf buf) {
-        int buttonPressed = buf.readInt();
-        return new MessageButtonPressed(buttonPressed);
-    }
+    public static void handle(final MessageButtonPressed message, final IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
 
-    public static void encode(MessageButtonPressed message, FriendlyByteBuf buf) {
-        buf.writeInt(message.buttonPressed);
-    }
+        if (!(player.containerMenu instanceof PortableStonecutterContainer container)) {
+            return;
+        }
 
-    public static void handle(MessageButtonPressed message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
-            if (player == null) {
-                return;
-            }
-
-            if (!(player.containerMenu instanceof PortableStonecutterContainer)) {
-                return;
-            }
-
-            PortableStonecutterContainer container = (PortableStonecutterContainer) player.containerMenu;
-            if (message.buttonPressed == CRAFT_ALL_BUTTON) {
-                container.craftAll(player);
-            } else if (message.buttonPressed == CRAFT_64_BUTTON) {
-                container.craft64(player);
-            } else {
-                PortableStonecutter.LOGGER.warn("Invalid messageId !");
-            }
-        });
-        context.setPacketHandled(true);
+        switch (message.buttonPressed) {
+            case CRAFT_ALL_BUTTON -> container.craftAll(player);
+            case CRAFT_64_BUTTON -> container.craft64(player);
+            default -> PortableStonecutter.LOGGER.warn("Invalid buttonPressed: " + message.buttonPressed);
+        }
     }
 }

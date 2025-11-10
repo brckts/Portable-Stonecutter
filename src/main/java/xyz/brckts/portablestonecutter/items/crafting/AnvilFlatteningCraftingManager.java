@@ -8,30 +8,33 @@ import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
+import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-@Mod.EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class AnvilFlatteningCraftingManager {
 
     @SubscribeEvent
-    public static void onEntityLeaveWorld(EntityLeaveWorldEvent event) {
+    public static void onEntityLeaveWorld(EntityLeaveLevelEvent event) {
 
-        if (event.getWorld().isClientSide()) return;
+        if (event.getLevel().isClientSide()) return;
 
         Entity entity = event.getEntity();
         if(entity instanceof FallingBlockEntity fbEntity) {
             if(fbEntity.getBlockState().getBlock() instanceof AnvilBlock) {
-                craft(event.getWorld(), entity.blockPosition());
+                craft(event.getLevel(), entity.blockPosition());
             }
         }
     }
@@ -41,17 +44,16 @@ public class AnvilFlatteningCraftingManager {
         if (level.isClientSide()) return;
 
         List<ItemEntity> itemEntityList = level.getEntitiesOfClass(ItemEntity.class, new AABB(pos));
-        SimpleContainer inv = new SimpleContainer(itemEntityList.size());
 
-        for(ItemEntity ie : itemEntityList) {
-            inv.addItem(ie.getItem());
-        }
+        AnvilFlatteningInput inv = new AnvilFlatteningInput(NonNullList.copyOf(itemEntityList.stream()
+                .map(ItemEntity::getItem)
+                .toList()));
 
-        Optional<AnvilFlatteningRecipe> recipeOptional = level.getRecipeManager().getRecipeFor(AnvilFlatteningRecipe.Type.INSTANCE, inv, level);
+        Optional<RecipeHolder<AnvilFlatteningRecipe>> recipeOptional = level.getRecipeManager().getRecipeFor(RegistryHandler.ANVIL_FLATTENING_RECIPE_TYPE.get(), inv, level);
 
         if (!recipeOptional.isPresent()) return;
 
-        AnvilFlatteningRecipe recipe = recipeOptional.get();
+        AnvilFlatteningRecipe recipe = recipeOptional.get().value();
 
         if (recipe.getAllowedDim() != null && !level.dimension().location().equals(recipe.getAllowedDim())) return;
 
@@ -70,6 +72,6 @@ public class AnvilFlatteningCraftingManager {
             }
         }
 
-        level.addFreshEntity(new ItemEntity(level, pos.getX(), pos.getY(), pos.getZ(), recipe.getResultItem()));
+        level.addFreshEntity(new ItemEntity(level, pos.getX(), pos.getY(), pos.getZ(), recipe.getResultItem(level.registryAccess())));
     }
 }

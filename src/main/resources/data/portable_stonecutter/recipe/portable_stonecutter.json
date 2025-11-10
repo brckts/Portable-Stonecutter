@@ -14,7 +14,8 @@
       "item": "minecraft:stonecutter"
     }
   ],
-  "output":  {
-    "item": "portable_stonecutter:portable_stonecutter"
+  "result":  {
+    "count": 1,
+    "id": "portable_stonecutter:portable_stonecutter"
   }
 }
