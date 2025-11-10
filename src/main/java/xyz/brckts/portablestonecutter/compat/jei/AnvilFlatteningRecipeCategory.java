@@ -1,58 +1,55 @@
 package xyz.brckts.portablestonecutter.compat.jei;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.IRecipeLayout;
+import com.mojang.blaze3d.vertex.PoseStack;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
-import xyz.brckts.portablestonecutter.api.IAnvilFlatteningRecipe;
+import xyz.brckts.portablestonecutter.items.crafting.AnvilFlatteningRecipe;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-public class AnvilFlatteningRecipeCategory implements IRecipeCategory<IAnvilFlatteningRecipe> {
+public class AnvilFlatteningRecipeCategory implements IRecipeCategory<AnvilFlatteningRecipe> {
 
-    public static final ResourceLocation UID = new ResourceLocation(PortableStonecutter.MOD_ID, "jei_anvil_flattening");
+    public static final RecipeType<AnvilFlatteningRecipe> RECIPE_TYPE =
+            RecipeType.create(PortableStonecutter.MOD_ID, "anvil_flattening", AnvilFlatteningRecipe.class);
+
+
     private static final ResourceLocation texture = new ResourceLocation(PortableStonecutter.MOD_ID, "textures/gui/jei_anvil_flattening.png");
 
     private final IDrawableStatic background;
     private final IDrawable icon;
-    private final String title;
-    private final IDrawableStatic overlay;
+    private final Component title;
+    //private final IDrawableStatic overlay;
 
     public AnvilFlatteningRecipeCategory(IGuiHelper guiHelper) {
-        this.background = guiHelper.createBlankDrawable(90, 90);
-        this.icon = guiHelper.createDrawableIngredient(new ItemStack(Blocks.ANVIL));
-        this.title = I18n.get("jei." + UID.toString());
-        this.overlay = guiHelper.createDrawable(texture, 0, 0, 64, 64);
+        this.background = guiHelper.createBlankDrawable(90, 70);
+        this.icon = guiHelper.createDrawableItemStack(new ItemStack(Items.ANVIL));
+        this.title = new TranslatableComponent("jei." + RECIPE_TYPE.getUid());
+        //this.overlay = guiHelper.createDrawable(texture, 0, 0, 64, 64);
+    }
+
+    @Override
+    public RecipeType<AnvilFlatteningRecipe> getRecipeType() {
+        return RECIPE_TYPE;
     }
 
     @Nonnull
     @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends IAnvilFlatteningRecipe> getRecipeClass() {
-        return IAnvilFlatteningRecipe.class;
-    }
-
-    @Nonnull
-    @Override
-    public String getTitle() {
+    public Component getTitle() {
         return title;
     }
 
@@ -68,38 +65,57 @@ public class AnvilFlatteningRecipeCategory implements IRecipeCategory<IAnvilFlat
     }
 
     @Override
-    public void setIngredients(IAnvilFlatteningRecipe recipe, IIngredients ingredients) {
-        List<List<ItemStack>> list = new ArrayList<>();
-        for (Ingredient ingr : recipe.getIngredients()) {
-            list.add(Arrays.asList(ingr.getItems()));
-        }
-        ingredients.setInputLists(VanillaTypes.ITEM, list);
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.getResultItem());
-    }
+    public void setRecipe(IRecipeLayoutBuilder builder, AnvilFlatteningRecipe recipe, IFocusGroup focuses) {
 
-    @Override
-    public void setRecipe(IRecipeLayout recipeLayout, IAnvilFlatteningRecipe recipe, IIngredients ingredients) {
-        int width = 80;
+        int width = this.background.getWidth() - 10;
         int index = 1;
-        int ingrCnt = ingredients.getInputs(VanillaTypes.ITEM).size();
+        int ingrCnt = recipe.getIngredients().size();
         int spaceBetweenEach = width / ingrCnt;
-        int offset = 35 - ((ingrCnt-1) * spaceBetweenEach)/2;
-        recipeLayout.getItemStacks().init(0, true, 35, 0); // anvil
-        recipeLayout.getItemStacks().set(0, new ItemStack(Blocks.ANVIL));
+        int offset = this.background.getWidth()/2 - ((ingrCnt-1) * spaceBetweenEach)/2 - 8;
+        builder.addSlot(RecipeIngredientRole.CATALYST, this.background.getWidth() / 2 - 8, 0).addItemStack(new ItemStack(Items.ANVIL));
 
-        for (List<ItemStack> o : ingredients.getInputs(VanillaTypes.ITEM)) {
-            recipeLayout.getItemStacks().init(index, true, offset + spaceBetweenEach * (index - 1), 45);
-            recipeLayout.getItemStacks().set(index, o);
+        for (Ingredient i : recipe.getIngredients()) {
+            builder.addSlot(RecipeIngredientRole.INPUT, offset + spaceBetweenEach * (index - 1), this.background.getHeight() - 16).addIngredients(i);
             index++;
         }
+
+        builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(recipe.getResultItem());
     }
 
+
     @Override
-    public void draw(IAnvilFlatteningRecipe recipe, MatrixStack matrixStack, double mouseX, double mouseY) {
-        RenderSystem.enableAlphaTest();
-        RenderSystem.enableBlend();
-        overlay.draw(matrixStack, 13, 20);
-        RenderSystem.disableBlend();
-        RenderSystem.disableAlphaTest();
+    public void draw(AnvilFlatteningRecipe recipe, IRecipeSlotsView recipeSlotsView, PoseStack poseStack, double mouseX, double mouseY) {
+        /*RenderSystem.enableBlend();
+        overlay.draw(stack, 13, 20);
+        RenderSystem.disableBlend();*/
+        if (recipe.getAllowedDim() == null)
+            return;
+
+        Minecraft minecraft = Minecraft.getInstance();
+        String text = "Only in " + recipe.getAllowedDim();
+        int mainColor = 0x2C9969;
+        int shadowColor = 0xFF000000 | (mainColor & 0xFCFCFC) >> 2;
+        int width = minecraft.font.width(text);
+        int height = minecraft.font.lineHeight;
+        int x = this.background.getWidth() - width - 1;
+        int y = this.background.getHeight() + height + 1;
+
+        minecraft.font.draw(poseStack, text, x + 1, y, shadowColor);
+        minecraft.font.draw(poseStack, text, x, y + 1, shadowColor);
+        minecraft.font.draw(poseStack, text, x + 1, y + 1, shadowColor);
+        minecraft.font.draw(poseStack, text, x, y, mainColor);
+    }
+
+    @SuppressWarnings("removal")
+    @Override
+    public ResourceLocation getUid() {
+        return getRecipeType().getUid();
+    }
+
+
+    @SuppressWarnings("removal")
+    @Override
+    public Class<? extends AnvilFlatteningRecipe> getRecipeClass() {
+        return getRecipeType().getRecipeClass();
     }
 }

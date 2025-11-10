@@ -1,0 +1,15 @@
+{
+  "type": "portable_stonecutter:anvil_flattening",
+  "ingredients": [
+    {
+      "item": "portable_stonecutter:portable_stonecutter"
+    },
+    {
+      "item": "minecraft:ender_pearl"
+    }
+  ],
+  "output":  {
+    "item": "portable_stonecutter:ender_portable_stonecutter"
+  },
+  "allowed_dim": "minecraft:the_end"
+}

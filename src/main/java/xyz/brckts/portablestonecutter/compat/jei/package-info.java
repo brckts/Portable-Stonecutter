@@ -2,6 +2,6 @@
 @ParametersAreNonnullByDefault
 package xyz.brckts.portablestonecutter.compat.jei;
 
-import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;

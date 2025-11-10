@@ -1,8 +1,8 @@
 package xyz.brckts.portablestonecutter.network;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkEvent;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
@@ -19,12 +19,12 @@ public class MessageButtonPressed {
         this.buttonPressed = buttonPressedIn;
     }
 
-    public static MessageButtonPressed decode(PacketBuffer buf) {
+    public static MessageButtonPressed decode(FriendlyByteBuf buf) {
         int buttonPressed = buf.readInt();
         return new MessageButtonPressed(buttonPressed);
     }
 
-    public static void encode(MessageButtonPressed message, PacketBuffer buf) {
+    public static void encode(MessageButtonPressed message, FriendlyByteBuf buf) {
         buf.writeInt(message.buttonPressed);
     }
 
@@ -32,7 +32,7 @@ public class MessageButtonPressed {
         NetworkEvent.Context context = contextSupplier.get();
 
         context.enqueueWork(() -> {
-            ServerPlayerEntity player = context.getSender();
+            ServerPlayer player = context.getSender();
             if (player == null) {
                 return;
             }

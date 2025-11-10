@@ -8,13 +8,15 @@ import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
-import xyz.brckts.portablestonecutter.items.crafting.ModRecipeTypes;
+import xyz.brckts.portablestonecutter.items.crafting.AnvilFlatteningRecipe;
 import xyz.brckts.portablestonecutter.util.RegistryHandler;
+
+import java.util.List;
 
 @JeiPlugin
 public class JEIAddon implements IModPlugin {
@@ -25,13 +27,19 @@ public class JEIAddon implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(Items.ANVIL), AnvilFlatteningRecipeCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(Items.ANVIL), AnvilFlatteningRecipeCategory.RECIPE_TYPE);
     }
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
-        registration.addRecipes(Minecraft.getInstance().level.getRecipeManager().getAllRecipesFor(ModRecipeTypes.ANVIL_FLATTENING_TYPE), AnvilFlatteningRecipeCategory.UID);
-        registration.addIngredientInfo(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()), VanillaTypes.ITEM, I18n.get("info." + PortableStonecutter.MOD_ID + ":portable_stonecutter"));
+
+        List<AnvilFlatteningRecipe> anvilFlatteningRecipes = Minecraft.getInstance().level.getRecipeManager().getAllRecipesFor(AnvilFlatteningRecipe.Type.INSTANCE);
+
+        registration.addRecipes(AnvilFlatteningRecipeCategory.RECIPE_TYPE, anvilFlatteningRecipes);
+
+        for (var recipe: anvilFlatteningRecipes) {
+            registration.addIngredientInfo(recipe.getResultItem(), VanillaTypes.ITEM_STACK, new TranslatableComponent("info." + PortableStonecutter.MOD_ID + ":anvil_flattening"));
+        }
     }
 
     @Override

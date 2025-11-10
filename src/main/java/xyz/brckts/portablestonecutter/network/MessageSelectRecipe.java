@@ -1,8 +1,8 @@
 package xyz.brckts.portablestonecutter.network;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkEvent;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
 import java.util.function.Supplier;
@@ -14,12 +14,12 @@ public class MessageSelectRecipe {
         this.recipe = recipeSelected;
     }
 
-    public static MessageSelectRecipe decode(PacketBuffer buf) {
+    public static MessageSelectRecipe decode(FriendlyByteBuf buf) {
         int recipeSelected = buf.readInt();
         return new MessageSelectRecipe(recipeSelected);
     }
 
-    public static void encode(MessageSelectRecipe message, PacketBuffer buf) {
+    public static void encode(MessageSelectRecipe message, FriendlyByteBuf buf) {
         buf.writeInt(message.recipe);
     }
 
@@ -27,7 +27,7 @@ public class MessageSelectRecipe {
         NetworkEvent.Context context = contextSupplier.get();
 
         context.enqueueWork(() -> {
-            ServerPlayerEntity player = context.getSender();
+            ServerPlayer player = context.getSender();
             if (player == null) {
                 return;
             }

@@ -1,135 +1,143 @@
 package xyz.brckts.portablestonecutter.items;
 
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.inventory.container.SimpleNamedContainerProvider;
-import net.minecraft.item.*;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.StonecuttingRecipe;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.crafting.StonecutterRecipe;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
-import xyz.brckts.portablestonecutter.util.RegistryHandler;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static xyz.brckts.portablestonecutter.util.NBTHelper.getInputItemFromNBT;
+import static xyz.brckts.portablestonecutter.util.NBTHelper.getRecipeFromNBT;
 
 @Mod.EventBusSubscriber(modid = PortableStonecutter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class PortableStonecutterItem extends Item {
-    private static final ITextComponent CONTAINER_NAME = new TranslationTextComponent("container.portable_stonecutter");
+    private static final Component CONTAINER_NAME = new TranslatableComponent("container.portable_stonecutter");
     public PortableStonecutterItem() {
         super(new Item.Properties().tab(PortableStonecutter.TAB).stacksTo(1));
     }
 
     @Override
-    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         if(!worldIn.isClientSide()) {
-            clearTags(playerIn);
+            //clearTags(playerIn);
             playerIn.openMenu(this.getContainer(worldIn, playerIn));
             playerIn.awardStat(Stats.INTERACT_WITH_STONECUTTER);
             return super.use(worldIn, playerIn, handIn);
         } else {
-            return ActionResult.success(playerIn.getItemInHand(handIn));
+            return InteractionResultHolder.success(playerIn.getItemInHand(handIn));
         }
-    }
-
-
-
-
-
-
-    private static void clearTags(PlayerEntity player) {
-        ItemStack stack = player.getMainHandItem();
-        stack.setTag(null);
     }
 
     @SubscribeEvent
     public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
 
-        World world = event.getWorld();
+        Level world = event.getWorld();
         BlockPos pos = event.getPos();
         if(world.isClientSide()) {
             return;
         }
 
-        ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
+        ServerPlayer player = (ServerPlayer) event.getPlayer();
 
         ItemStack is = event.getItemStack();
 
-        if(!is.sameItemStackIgnoreDurability(new ItemStack(RegistryHandler.PORTABLE_STONECUTTER.get()))) {
+        if(!(is.getItem() instanceof PortableStonecutterItem)) {
             return;
         }
 
-        CompoundNBT nbt = is.getTag();
+        CompoundTag nbt = is.getTag();
+        StonecutterRecipe recipe = getRecipeFromNBT(world, nbt);
+        Item inputItem = getInputItemFromNBT(nbt);
 
-        if(nbt == null || !nbt.contains("item") || !nbt.contains("recipeId")) {
-            clearTags(player);
-            return;
-        }
+        if (recipe == null) return;
 
-        int recipeId = nbt.getInt("recipeId");
-        ResourceLocation inputItemRL = new ResourceLocation(nbt.getString("item"));
-
-        if(!GameRegistry.findRegistry(Item.class).containsKey(inputItemRL)) {
-            clearTags(player);
-            return;
-        }
-
-        Item inputItem = GameRegistry.findRegistry(Item.class).getValue(inputItemRL);
-        if(!world.getBlockState(pos).getBlock().equals(Block.byItem(inputItem))) {
-            return;
-        }
-
-        IInventory inputInventory = new Inventory(1);
-        inputInventory.setItem(0, new ItemStack(inputItem));
-
-        List<StonecuttingRecipe> recipes = world.getRecipeManager().getRecipesFor(IRecipeType.STONECUTTING, inputInventory, world);
-
-        if(recipeId >= recipes.size()) {
-            clearTags(player);
-            return;
-        }
-
-        StonecuttingRecipe recipe = recipes.get(recipeId);
         Block outputBlock = Block.byItem(recipe.getResultItem().getItem());
         int outputCnt = recipe.getResultItem().getCount();
 
-        if(outputBlock == Blocks.AIR) {
-            return;
+        if(outputBlock == Blocks.AIR) return;
+
+        BlockHitResult blockRayTraceResult = getPlayerPOVHitResult(world, player, ClipContext.Fluid.ANY);
+
+        List<BlockPos> toReplace;
+
+        if (is.getItem() instanceof EnderPortableStonecutterItem) {
+            switch (((EnderPortableStonecutterItem) is.getItem()).getMode(is)) {
+                case THREE_BY_THREE ->
+                        toReplace = toReplaceThreeByThree(world, Block.byItem(inputItem), pos, blockRayTraceResult.getDirection());
+                case LINE ->
+                        toReplace = toReplaceLine(world, Block.byItem(inputItem), pos, blockRayTraceResult.getDirection(), 2);
+                default -> {
+                    toReplace = new ArrayList<>();
+                    if (world.getBlockState(pos).getBlock().equals(Block.byItem(inputItem))) toReplace.add(pos);
+                }
+            }
+        } else {
+            toReplace = new ArrayList<>();
+            if (world.getBlockState(pos).getBlock().equals(Block.byItem(inputItem))) toReplace.add(pos);
         }
 
-        BlockRayTraceResult blockRayTraceResult = getPlayerPOVHitResult(world, player, RayTraceContext.FluidMode.ANY);
-        world.setBlockAndUpdate(pos, outputBlock.getStateForPlacement(new BlockItemUseContext(new ItemUseContext(player, Hand.MAIN_HAND, blockRayTraceResult))));
+        BlockState outputState = outputBlock.getStateForPlacement(new BlockPlaceContext(new UseOnContext(player, InteractionHand.MAIN_HAND, blockRayTraceResult)));
 
-        if(outputCnt > 1) {
-            player.drop(new ItemStack(recipe.getResultItem().getItem(), outputCnt - 1), true, true);
+        for (BlockPos blockPos : toReplace) {
+            BlockState inputState = world.getBlockState(blockPos);
+            world.setBlockAndUpdate(blockPos, outputState);
+            world.levelEvent(2001, blockPos, Block.getId(inputState));
+
+            if (outputCnt > 1) {
+                player.drop(new ItemStack(recipe.getResultItem().getItem(), outputCnt - 1), true, true);
+            }
         }
     }
 
+    private static List<BlockPos> toReplaceThreeByThree(Level world, Block validBlock, BlockPos pos, Direction direction) {
+        Stream<BlockPos> toReplaceStream = switch (direction.getAxis()) {
+            case X -> BlockPos.betweenClosedStream(pos.offset(0, -1, -1), pos.offset(0, 1, 1));
+            case Y -> BlockPos.betweenClosedStream(pos.offset(-1, 0, -1), pos.offset(1, 0, 1));
+            case Z -> BlockPos.betweenClosedStream(pos.offset(-1, -1, 0), pos.offset(1, 1, 0));
+            default -> BlockPos.betweenClosedStream(pos, pos);
+        };
 
-    public INamedContainerProvider getContainer(World worldIn, PlayerEntity playerIn) {
-        return new SimpleNamedContainerProvider((id, inventory, player) -> new PortableStonecutterContainer(id, inventory), CONTAINER_NAME);
+        return toReplaceStream.map(BlockPos::immutable)
+                .filter(blockPos -> world.getBlockState(blockPos).getBlock().equals(validBlock))
+                .collect(Collectors.toList());
+    }
+
+    private static List<BlockPos> toReplaceLine(Level world, Block validBlock, BlockPos pos, Direction direction, int range) {
+        return BlockPos.betweenClosedStream(pos, pos.relative(direction, -range)).map(BlockPos::immutable)
+                .filter(blockPos -> world.getBlockState(blockPos).getBlock().equals(validBlock))
+                .collect(Collectors.toList());
+    }
+
+    public MenuProvider getContainer(Level worldIn, Player playerIn) {
+        return new SimpleMenuProvider((id, inventory, player) -> new PortableStonecutterContainer(id, inventory), CONTAINER_NAME);
     }
 }

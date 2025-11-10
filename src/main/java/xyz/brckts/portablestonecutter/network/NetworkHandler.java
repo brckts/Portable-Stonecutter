@@ -1,13 +1,13 @@
 package xyz.brckts.portablestonecutter.network;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
 import xyz.brckts.portablestonecutter.PortableStonecutter;
 
 import java.util.Optional;
 
-import static net.minecraftforge.fml.network.NetworkDirection.PLAY_TO_SERVER;
+import static net.minecraftforge.network.NetworkDirection.PLAY_TO_SERVER;
 
 public class NetworkHandler {
 
