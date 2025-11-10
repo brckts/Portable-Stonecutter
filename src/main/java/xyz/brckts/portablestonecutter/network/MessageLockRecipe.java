@@ -1,46 +1,55 @@
 package xyz.brckts.portablestonecutter.network;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import xyz.brckts.portablestonecutter.PortableStonecutter;
+import net.minecraftforge.network.NetworkEvent;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
-public record MessageLockRecipe(int recipeIndex, boolean lockStatus) implements CustomPacketPayload {
-    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(PortableStonecutter.MOD_ID, "lock_recipe");
-    public static final CustomPacketPayload.Type<MessageLockRecipe> TYPE = new CustomPacketPayload.Type<>(ID);
-    public static final StreamCodec<ByteBuf, MessageLockRecipe> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.VAR_INT,
-            MessageLockRecipe::recipeIndex,
-            ByteBufCodecs.BOOL,
-            MessageLockRecipe::lockStatus,
-            MessageLockRecipe::new
-    );
+import java.util.function.Supplier;
 
-    @Override
-    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+public class MessageLockRecipe {
+
+    private final int recipeIndex;
+    private final boolean lockStatus;
+    public MessageLockRecipe(int recipeIndex, boolean lockStatus) {
+        this.recipeIndex = recipeIndex;
+        this.lockStatus = lockStatus;
     }
 
-    public static void handle(final MessageLockRecipe message, final IPayloadContext context) {
-        if (!(context.player() instanceof ServerPlayer player)) {
-            return;
-        }
+    public static MessageLockRecipe decode(FriendlyByteBuf buf) {
+        int recipeIndex = buf.readInt();
+        boolean lockStatus = buf.readBoolean();
+        return new MessageLockRecipe(recipeIndex, lockStatus);
+    }
 
-        if (!(player.containerMenu instanceof PortableStonecutterContainer container)) {
-            return;
-        }
+    public static void encode(MessageLockRecipe message, FriendlyByteBuf buf) {
+        buf.writeInt(message.recipeIndex);
+        buf.writeBoolean(message.lockStatus);
+    }
 
-        container.setRecipeLocked(message.lockStatus);
+    public static void handle(MessageLockRecipe message, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
 
-        if (message.lockStatus) {
-            container.onRecipeLocked(message.recipeIndex, player);
-        } else {
-            container.onRecipeUnlocked(player);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) {
+                return;
+            }
+
+            if (!(player.containerMenu instanceof PortableStonecutterContainer)) {
+                return;
+            }
+
+            int recipeIndex = message.recipeIndex;
+
+            PortableStonecutterContainer container = (PortableStonecutterContainer) player.containerMenu;
+            container.setRecipeLocked(message.lockStatus);
+            if(message.lockStatus) {
+                container.onRecipeLocked(recipeIndex, player);
+            } else {
+                container.onRecipeUnlocked(player);
+            }
+        });
+        context.setPacketHandled(true);
     }
 }

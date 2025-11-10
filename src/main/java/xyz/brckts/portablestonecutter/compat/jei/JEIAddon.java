@@ -8,7 +8,7 @@ import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -22,7 +22,7 @@ import java.util.List;
 public class JEIAddon implements IModPlugin {
     @Override
     public ResourceLocation getPluginUid() {
-        return ResourceLocation.fromNamespaceAndPath(PortableStonecutter.MOD_ID, "jei");
+        return new ResourceLocation(PortableStonecutter.MOD_ID, "jei");
     }
 
     @Override
@@ -33,12 +33,12 @@ public class JEIAddon implements IModPlugin {
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
 
-        List<AnvilFlatteningRecipe> anvilFlatteningRecipes = Minecraft.getInstance().level.getRecipeManager().getAllRecipesFor(RegistryHandler.ANVIL_FLATTENING_RECIPE_TYPE.get()).stream().map(rh -> rh.value()).toList();
+        List<AnvilFlatteningRecipe> anvilFlatteningRecipes = Minecraft.getInstance().level.getRecipeManager().getAllRecipesFor(AnvilFlatteningRecipe.Type.INSTANCE);
 
         registration.addRecipes(AnvilFlatteningRecipeCategory.RECIPE_TYPE, anvilFlatteningRecipes);
 
         for (var recipe: anvilFlatteningRecipes) {
-            registration.addIngredientInfo(recipe.getResultItem(Minecraft.getInstance().level.registryAccess()), VanillaTypes.ITEM_STACK, Component.translatable("info." + PortableStonecutter.MOD_ID + ":anvil_flattening"));
+            registration.addIngredientInfo(recipe.getResultItem(), VanillaTypes.ITEM_STACK, new TranslatableComponent("info." + PortableStonecutter.MOD_ID + ":anvil_flattening"));
         }
     }
 
