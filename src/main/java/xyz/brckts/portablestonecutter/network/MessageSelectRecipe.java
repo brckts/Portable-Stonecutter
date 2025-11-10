@@ -1,44 +1,38 @@
 package xyz.brckts.portablestonecutter.network;
 
-import net.minecraft.network.FriendlyByteBuf;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import xyz.brckts.portablestonecutter.PortableStonecutter;
 import xyz.brckts.portablestonecutter.containers.PortableStonecutterContainer;
 
-import java.util.function.Supplier;
+public record MessageSelectRecipe(int recipe) implements CustomPacketPayload {
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(PortableStonecutter.MOD_ID, "select_recipe");
+    public static final CustomPacketPayload.Type<MessageSelectRecipe> TYPE = new CustomPacketPayload.Type<>(ID);
+    public static final StreamCodec<ByteBuf, MessageSelectRecipe> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.VAR_INT,
+            MessageSelectRecipe::recipe,
+            MessageSelectRecipe::new
+    );
 
-public class MessageSelectRecipe {
-    private final int recipe;
-
-    public MessageSelectRecipe(int recipeSelected) {
-        this.recipe = recipeSelected;
+    @Override
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static MessageSelectRecipe decode(FriendlyByteBuf buf) {
-        int recipeSelected = buf.readInt();
-        return new MessageSelectRecipe(recipeSelected);
-    }
+    public static void handle(final MessageSelectRecipe message, final IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
 
-    public static void encode(MessageSelectRecipe message, FriendlyByteBuf buf) {
-        buf.writeInt(message.recipe);
-    }
+        if (!(player.containerMenu instanceof PortableStonecutterContainer container)) {
+            return;
+        }
 
-    public static void handle(MessageSelectRecipe message, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
-            if (player == null) {
-                return;
-            }
-
-            if (!(player.containerMenu instanceof PortableStonecutterContainer)) {
-                return;
-            }
-
-            PortableStonecutterContainer container = (PortableStonecutterContainer) player.containerMenu;
-            container.selectRecipe(message.recipe);
-        });
-        context.setPacketHandled(true);
+        container.selectRecipe(message.recipe);
     }
 }
